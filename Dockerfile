@@ -68,5 +68,5 @@ RUN find /out -name "*.a" -delete -or -name "*.la" -delete
 
 FROM alpine:${ALPINE_VERSION}
 COPY --from=packer /out/ /
-RUN apk add --no-cache bash libstdc++ protoc
+RUN apk add --no-cache bash libstdc++ protoc protobuf-dev
 ENTRYPOINT ["/bin/bash"]
