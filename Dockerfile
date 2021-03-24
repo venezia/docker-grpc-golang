@@ -4,10 +4,10 @@ ARG GRPC_GATEWAY_VERSION=2.2.0
 ARG PROTOC_GEN_GO_VERSION=1.4.3
 ARG PROTOC_GEN_GOGO_VERSION=1.3.2
 ARG PROTOC_GEN_LINT_VERSION=0.2.1
-ARG UPX_VERSION=3.96
+ARG PROTOC_GEN_DOC_VERSION=1.4.1
 
 
-FROM golang:${GO_VERSION}-alpine${ALPINE_VERSION} as go_builder
+FROM quay.io/venezia/golang:${GO_VERSION}-alpine${ALPINE_VERSION} as go_builder
 RUN apk add --no-cache build-base curl git
 
 ARG PROTOC_GEN_GO_VERSION
@@ -50,23 +50,24 @@ RUN mkdir -p ${GOPATH}/src/github.com/grpc-ecosystem/grpc-gateway && \
     mkdir -p /out/usr/include/google/rpc && \
     install -D $(find ./third_party/googleapis/google/rpc -name '*.proto') -t /out/usr/include/google/rpc
 
+ARG PROTOC_GEN_DOC_VERSION
+RUN mkdir -p ${GOPATH}/src/github.com/pseudomuto/protoc-gen-doc && \
+    curl -sSL https://api.github.com/repos/pseudomuto/protoc-gen-doc/tarball/v${PROTOC_GEN_DOC_VERSION} | tar xz --strip 1 -C ${GOPATH}/src/github.com/pseudomuto/protoc-gen-doc && \
+    cd ${GOPATH}/src/github.com/pseudomuto/protoc-gen-doc && \
+    go build -ldflags '-w -s' ./cmd/... && \
+    install -Ds ./protoc-gen-doc /out/usr/bin/protoc-gen-doc
 
-FROM alpine:${ALPINE_VERSION} as packer
+FROM quay.io/venezia/alpine:${ALPINE_VERSION} as packer
 RUN apk add --no-cache curl
-
-ARG UPX_VERSION
-RUN mkdir -p /upx && curl -sSL https://github.com/upx/upx/releases/download/v${UPX_VERSION}/upx-${UPX_VERSION}-amd64_linux.tar.xz | tar xJ --strip 1 -C /upx && \
-    install -D /upx/upx /usr/local/bin/upx
 
 # Integrate all output from go_builder
 COPY --from=go_builder /out/ /out/
 
-RUN upx --lzma \
-        /out/usr/bin/protoc-gen-*
 RUN find /out -name "*.a" -delete -or -name "*.la" -delete
 
 
-FROM alpine:${ALPINE_VERSION}
+FROM quay.io/venezia/alpine:${ALPINE_VERSION}
 COPY --from=packer /out/ /
 RUN apk add --no-cache bash libstdc++ protoc protobuf-dev
 ENTRYPOINT ["/bin/bash"]
+
