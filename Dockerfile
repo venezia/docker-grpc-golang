@@ -1,14 +1,15 @@
-ARG ALPINE_VERSION=3.13
-ARG GO_VERSION=1.15.8
-ARG GRPC_GATEWAY_VERSION=2.2.0
-ARG PROTOC_GEN_GO_VERSION=1.4.3
+ARG ALPINE_VERSION=3.16
+ARG GO_VERSION=1.18.2
+ARG GRPC_GATEWAY_VERSION=2.10.2
+ARG PROTOC_GEN_GO_VERSION=1.5.2
 ARG PROTOC_GEN_GOGO_VERSION=1.3.2
-ARG PROTOC_GEN_LINT_VERSION=0.2.1
-ARG PROTOC_GEN_DOC_VERSION=1.4.1
+ARG PROTOC_GEN_LINT_VERSION=0.2.4
+ARG PROTOC_GEN_DOC_VERSION=1.5.1
 
 
 FROM quay.io/venezia/golang:${GO_VERSION}-alpine${ALPINE_VERSION} as go_builder
 RUN apk add --no-cache build-base curl git
+ADD ./third_party ./third_party
 
 ARG PROTOC_GEN_GO_VERSION
 RUN mkdir -p ${GOPATH}/src/github.com/golang/protobuf && \
@@ -46,9 +47,9 @@ RUN mkdir -p ${GOPATH}/src/github.com/grpc-ecosystem/grpc-gateway && \
     mkdir -p /out/usr/include/protoc-gen-openapiv2/options && \
     install -D $(find ./protoc-gen-openapiv2/options -name '*.proto') -t /out/usr/include/protoc-gen-openapiv2/options && \
     mkdir -p /out/usr/include/google/api && \
-    install -D $(find ./third_party/googleapis/google/api -name '*.proto') -t /out/usr/include/google/api && \
+    install -D $(find /go/third_party/googleapis/google/api -name '*.proto') -t /out/usr/include/google/api && \
     mkdir -p /out/usr/include/google/rpc && \
-    install -D $(find ./third_party/googleapis/google/rpc -name '*.proto') -t /out/usr/include/google/rpc
+    install -D $(find /go/third_party/googleapis/google/rpc -name '*.proto') -t /out/usr/include/google/rpc
 
 ARG PROTOC_GEN_DOC_VERSION
 RUN mkdir -p ${GOPATH}/src/github.com/pseudomuto/protoc-gen-doc && \
