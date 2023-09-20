@@ -1,6 +1,7 @@
-ARG ALPINE_VERSION=3.17
-ARG GO_VERSION=1.20.3
-ARG GRPC_GATEWAY_VERSION=2.15.2
+ARG ALPINE_VERSION=3.18
+ARG GO_VERSION=1.21.1
+ARG GRPC_GATEWAY_VERSION=2.18.0
+ARG GRPC_GO_GRPC_VERSION=1.58.1
 ARG PROTOC_GEN_GO_VERSION=1.5.3
 ARG PROTOC_GEN_GOGO_VERSION=1.3.2
 ARG PROTOC_GEN_LINT_VERSION=0.3.0
@@ -10,6 +11,13 @@ ARG PROTOC_GEN_DOC_VERSION=1.5.1
 FROM quay.io/venezia/golang:${GO_VERSION}-alpine${ALPINE_VERSION} as go_builder
 RUN apk add --no-cache build-base curl git
 ADD ./third_party ./third_party
+
+ARG GRPC_GO_GRPC_VERSION
+RUN mkdir -p ${GOPATH}/src/github.com/grpc/grpc-go && \
+    curl -sSL https://api.github.com/repos/grpc/grpc-go/tarball/v${GRPC_GO_GRPC_VERSION} | tar xz --strip 1 -C ${GOPATH}/src/github.com/grpc/grpc-go &&\
+    cd ${GOPATH}/src/github.com/grpc/grpc-go/cmd/protoc-gen-go-grpc && \
+    go build -ldflags '-w -s' -o /protoc-gen-go-grpc-out/protoc-gen-go-grpc && \
+    install -Ds /protoc-gen-go-grpc-out/protoc-gen-go-grpc /out/usr/bin/protoc-gen-go-grpc
 
 ARG PROTOC_GEN_GO_VERSION
 RUN mkdir -p ${GOPATH}/src/github.com/golang/protobuf && \
