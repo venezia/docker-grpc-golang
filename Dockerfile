@@ -1,14 +1,14 @@
-ARG ALPINE_VERSION=3.19
-ARG GO_VERSION=1.22.1
-ARG GRPC_GATEWAY_VERSION=2.19.1
-ARG GRPC_GO_GRPC_VERSION=1.62.1
-ARG PROTOC_GEN_GO_VERSION=1.5.4
+ARG ALPINE_VERSION=3.21
+ARG GO_VERSION=1.23.5
+ARG GRPC_GATEWAY_VERSION=2.26.0
+ARG GRPC_GO_GRPC_VERSION=1.70.0
+ARG PROTOC_GEN_GO_VERSION=1.36.4
 ARG PROTOC_GEN_GOGO_VERSION=1.3.2
 ARG PROTOC_GEN_LINT_VERSION=0.3.0
 ARG PROTOC_GEN_DOC_VERSION=1.5.1
 
 
-FROM quay.io/venezia/golang:${GO_VERSION}-alpine${ALPINE_VERSION} as go_builder
+FROM golang:${GO_VERSION}-alpine${ALPINE_VERSION} as go_builder
 RUN apk add --no-cache build-base curl git
 ADD ./third_party ./third_party
 
@@ -20,10 +20,10 @@ RUN mkdir -p ${GOPATH}/src/github.com/grpc/grpc-go && \
     install -Ds /protoc-gen-go-grpc-out/protoc-gen-go-grpc /out/usr/bin/protoc-gen-go-grpc
 
 ARG PROTOC_GEN_GO_VERSION
-RUN mkdir -p ${GOPATH}/src/github.com/golang/protobuf && \
-    curl -sSL https://api.github.com/repos/golang/protobuf/tarball/v${PROTOC_GEN_GO_VERSION} | tar xz --strip 1 -C ${GOPATH}/src/github.com/golang/protobuf &&\
-    cd ${GOPATH}/src/github.com/golang/protobuf && \
-    go build -ldflags '-w -s' -o /golang-protobuf-out/protoc-gen-go ./protoc-gen-go && \
+RUN mkdir -p ${GOPATH}/src/github.com/protocolbuffers/protobuf-go && \
+    curl -sSL https://api.github.com/repos/protocolbuffers/protobuf-go/tarball/v${PROTOC_GEN_GO_VERSION} | tar xz --strip 1 -C ${GOPATH}/src/github.com/protocolbuffers/protobuf-go &&\
+    cd ${GOPATH}/src/github.com/protocolbuffers/protobuf-go && \
+    go build -ldflags '-w -s' -o /golang-protobuf-out/protoc-gen-go ./cmd/protoc-gen-go && \
     install -Ds /golang-protobuf-out/protoc-gen-go /out/usr/bin/protoc-gen-go
 
 ARG PROTOC_GEN_GOGO_VERSION
@@ -66,7 +66,7 @@ RUN mkdir -p ${GOPATH}/src/github.com/pseudomuto/protoc-gen-doc && \
     go build -ldflags '-w -s' ./cmd/... && \
     install -Ds ./protoc-gen-doc /out/usr/bin/protoc-gen-doc
 
-FROM quay.io/venezia/alpine:${ALPINE_VERSION} as packer
+FROM golang:${GO_VERSION}-alpine${ALPINE_VERSION} as packer
 RUN apk add --no-cache curl
 
 # Integrate all output from go_builder
@@ -75,8 +75,9 @@ COPY --from=go_builder /out/ /out/
 RUN find /out -name "*.a" -delete -or -name "*.la" -delete
 
 
-FROM quay.io/venezia/alpine:${ALPINE_VERSION}
+FROM golang:${GO_VERSION}-alpine${ALPINE_VERSION}
 COPY --from=packer /out/ /
 RUN apk add --no-cache bash libstdc++ protoc protobuf-dev
+RUN go install github.com/magefile/mage@v1.15.0
 ENTRYPOINT ["/bin/bash"]
 
