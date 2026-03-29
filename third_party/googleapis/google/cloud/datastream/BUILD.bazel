@@ -11,6 +11,8 @@ load(
     "@com_google_googleapis_imports//:imports.bzl",
     "ruby_cloud_gapic_library",
     "ruby_gapic_assembly_pkg",
+
+    "nodejs_gapic_combined_pkg"
 )
 
 # Generates a Ruby wrapper client for datastream.
@@ -21,13 +23,14 @@ ruby_cloud_gapic_library(
     srcs = ["//google/cloud/datastream/v1:datastream_proto_with_info"],
     extra_protoc_parameters = [
         "ruby-cloud-gem-name=google-cloud-datastream",
-        "ruby-cloud-wrapper-of=v1:0.0",
+        "ruby-cloud-wrapper-of=v1:1.0",
         "ruby-cloud-product-url=https://cloud.google.com/datastream/",
         "ruby-cloud-api-id=datastream.googleapis.com",
         "ruby-cloud-api-shortname=datastream",
     ],
     ruby_cloud_description = "Datastream is a serverless and easy-to-use change data capture (CDC) and replication service. It allows you to synchronize data across heterogeneous databases and applications reliably, and with minimal latency and downtime.",
     ruby_cloud_title = "Datastream",
+    transport = "grpc+rest",
 )
 
 # Open Source package.
@@ -35,5 +38,16 @@ ruby_gapic_assembly_pkg(
     name = "google-cloud-datastream-ruby",
     deps = [
         ":datastream_ruby_wrapper",
+    ],
+)
+
+nodejs_gapic_combined_pkg(
+    name = "google-cloud-datastream-nodejs",
+    default_version = "v1",
+    release_level = "stable",
+    templates_excludes = ["package.json", ".Owlbot.yaml"],
+    deps = [
+        "//google/cloud/datastream/v1:datastream-v1-nodejs",
+        "//google/cloud/datastream/v1alpha1:datastream-v1alpha1-nodejs"
     ],
 )

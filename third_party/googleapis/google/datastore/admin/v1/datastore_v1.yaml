@@ -5,6 +5,7 @@ title: Cloud Datastore API
 
 apis:
 - name: google.datastore.admin.v1.DatastoreAdmin
+- name: google.longrunning.Operations
 
 types:
 - name: google.datastore.admin.v1.DatastoreFirestoreMigrationMetadata
@@ -50,3 +51,9 @@ authentication:
       canonical_scopes: |-
         https://www.googleapis.com/auth/cloud-platform,
         https://www.googleapis.com/auth/datastore
+
+publishing:
+  library_settings:
+  - version: google.datastore.admin.v1
+    java_settings:
+      library_package: com.google.cloud.datastore.admin.v1

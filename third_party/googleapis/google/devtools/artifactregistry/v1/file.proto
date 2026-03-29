@@ -1,4 +1,4 @@
-// Copyright 2022 Google LLC
+// Copyright 2026 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,11 +16,13 @@ syntax = "proto3";
 
 package google.devtools.artifactregistry.v1;
 
+import "google/api/field_behavior.proto";
 import "google/api/resource.proto";
+import "google/protobuf/field_mask.proto";
 import "google/protobuf/timestamp.proto";
 
 option csharp_namespace = "Google.Cloud.ArtifactRegistry.V1";
-option go_package = "google.golang.org/genproto/googleapis/devtools/artifactregistry/v1;artifactregistry";
+option go_package = "cloud.google.com/go/artifactregistry/apiv1/artifactregistrypb;artifactregistrypb";
 option java_multiple_files = true;
 option java_outer_classname = "FileProto";
 option java_package = "com.google.devtools.artifactregistry.v1";
@@ -39,6 +41,9 @@ message Hash {
 
     // MD5 hash.
     MD5 = 2;
+
+    // Dirsum SHA256 hash.
+    DIRSUM_SHA256 = 3;
   }
 
   // The algorithm used to compute the hash value.
@@ -56,7 +61,7 @@ message File {
   };
 
   // The name of the file, for example:
-  // "projects/p1/locations/us-central1/repositories/repo1/files/a%2Fb%2Fc.txt".
+  // `projects/p1/locations/us-central1/repositories/repo1/files/a%2Fb%2Fc.txt`.
   // If the file ID part contains slashes, they are escaped.
   string name = 1;
 
@@ -66,37 +71,90 @@ message File {
   // The hashes of the file content.
   repeated Hash hashes = 4;
 
-  // The time when the File was created.
-  google.protobuf.Timestamp create_time = 5;
+  // Output only. The time when the File was created.
+  google.protobuf.Timestamp create_time = 5
+      [(google.api.field_behavior) = OUTPUT_ONLY];
 
-  // The time when the File was last updated.
-  google.protobuf.Timestamp update_time = 6;
+  // Output only. The time when the File was last updated.
+  google.protobuf.Timestamp update_time = 6
+      [(google.api.field_behavior) = OUTPUT_ONLY];
 
   // The name of the Package or Version that owns this file, if any.
   string owner = 7;
+
+  // Output only. The time when the last attempt to refresh the file's data was
+  // made. Only set when the repository is remote.
+  google.protobuf.Timestamp fetch_time = 8
+      [(google.api.field_behavior) = OUTPUT_ONLY];
+
+  // Optional. Client specified annotations.
+  map<string, string> annotations = 9 [(google.api.field_behavior) = OPTIONAL];
 }
 
 // The request to list files.
 message ListFilesRequest {
-  // The name of the repository whose files will be listed. For example:
-  // "projects/p1/locations/us-central1/repositories/repo1
-  string parent = 1;
+  // Required. The name of the repository whose files will be listed. For
+  // example: "projects/p1/locations/us-central1/repositories/repo1
+  string parent = 1 [
+    (google.api.field_behavior) = REQUIRED,
+    (google.api.resource_reference) = {
+      child_type: "artifactregistry.googleapis.com/File"
+    }
+  ];
 
   // An expression for filtering the results of the request. Filter rules are
   // case insensitive. The fields eligible for filtering are:
   //
   //   * `name`
   //   * `owner`
+  //   * `annotations`
   //
-  //  An example of using a filter:
+  // Examples of using a filter:
   //
-  //   * `name="projects/p1/locations/us-central1/repositories/repo1/files/a/b/*"` --> Files with an
-  //   ID starting with "a/b/".
-  //   * `owner="projects/p1/locations/us-central1/repositories/repo1/packages/pkg1/versions/1.0"` -->
-  //   Files owned by the version `1.0` in package `pkg1`.
+  //  To filter the results of your request to files with the name `my_file.txt`
+  //  in project `my-project` in the `us-central` region, in repository
+  //  `my-repo`, append the following filter expression to your request:
+  //
+  //   * `name="projects/my-project/locations/us-central1/repositories/my-repo/files/my-file.txt"`
+  //
+  //  You can also use wildcards to match any number of characters before or
+  //  after the value:
+  //
+  //   * `name="projects/my-project/locations/us-central1/repositories/my-repo/files/my-*"`
+  //   * `name="projects/my-project/locations/us-central1/repositories/my-repo/files/*file.txt"`
+  //   * `name="projects/my-project/locations/us-central1/repositories/my-repo/files/*file*"`
+  //
+  //  To filter the results of your request to files owned by the version `1.0`
+  //  in package `pkg1`, append the following filter expression to your request:
+  //
+  //   * `owner="projects/my-project/locations/us-central1/repositories/my-repo/packages/my-package/versions/1.0"`
+  //
+  //  To filter the results of your request to files with the annotation
+  //  key-value pair [`external_link`: `external_link_value`], append the
+  //  following filter expression to your request:
+  //
+  //   * `"annotations.external_link:external_link_value"`
+  //
+  //  To filter just for a specific annotation key `external_link`, append the
+  //  following filter expression to your request:
+  //
+  //   * `"annotations.external_link"`
+  //
+  //  If the annotation key or value contains special characters, you can escape
+  //  them by surrounding the value with backticks. For example, to filter the
+  //  results of your request to files with the annotation key-value pair
+  //  [`external.link`:`https://example.com/my-file`], append the following
+  //  filter expression to your request:
+  //
+  //   * `` "annotations.`external.link`:`https://example.com/my-file`" ``
+  //
+  //  You can also filter with annotations with a wildcard to
+  //  match any number of characters before or after the value:
+  //
+  //   * `` "annotations.*_link:`*example.com*`" ``
   string filter = 4;
 
-  // The maximum number of files to return.
+  // The maximum number of files to return. Maximum page size is 1,000.
   int32 page_size = 2;
 
   // The next_page_token value returned from a previous list request, if any.
@@ -118,6 +176,34 @@ message ListFilesResponse {
 
 // The request to retrieve a file.
 message GetFileRequest {
-  // The name of the file to retrieve.
-  string name = 1;
+  // Required. The name of the file to retrieve.
+  string name = 1 [
+    (google.api.field_behavior) = REQUIRED,
+    (google.api.resource_reference) = {
+      type: "artifactregistry.googleapis.com/File"
+    }
+  ];
+}
+
+// The request to delete a file.
+message DeleteFileRequest {
+  // Required. The name of the file to delete.
+  string name = 1 [
+    (google.api.field_behavior) = REQUIRED,
+    (google.api.resource_reference) = {
+      type: "artifactregistry.googleapis.com/File"
+    }
+  ];
+}
+
+// The request to update a file.
+message UpdateFileRequest {
+  // Required. The File that replaces the resource on the server.
+  File file = 1 [(google.api.field_behavior) = REQUIRED];
+
+  // Required. The update mask applies to the resource. For the `FieldMask`
+  // definition, see
+  // https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#fieldmask
+  google.protobuf.FieldMask update_mask = 2
+      [(google.api.field_behavior) = REQUIRED];
 }

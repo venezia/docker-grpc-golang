@@ -1,4 +1,4 @@
-// Copyright 2022 Google LLC
+// Copyright 2025 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,10 +23,13 @@ import "google/api/resource.proto";
 import "google/longrunning/operations.proto";
 import "google/protobuf/timestamp.proto";
 
-option go_package = "google.golang.org/genproto/googleapis/cloud/apigeeregistry/v1;apigeeregistry";
+option csharp_namespace = "Google.Cloud.ApigeeRegistry.V1";
+option go_package = "cloud.google.com/go/apigeeregistry/apiv1/apigeeregistrypb;apigeeregistrypb";
 option java_multiple_files = true;
 option java_outer_classname = "ProvisioningServiceProto";
 option java_package = "com.google.cloud.apigeeregistry.v1";
+option php_namespace = "Google\\Cloud\\ApigeeRegistry\\V1";
+option ruby_package = "Google::Cloud::ApigeeRegistry::V1";
 
 // The service that is used for managing the data plane provisioning of the
 // Registry.
@@ -182,7 +185,7 @@ message Instance {
   }
 
   // Format: `projects/*/locations/*/instance`.
-  // Currently only locations/global is supported.
+  // Currently only `locations/global` is supported.
   string name = 1;
 
   // Output only. Creation timestamp.

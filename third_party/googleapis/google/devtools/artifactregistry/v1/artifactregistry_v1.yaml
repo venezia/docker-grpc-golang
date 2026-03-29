@@ -4,13 +4,21 @@ name: artifactregistry.googleapis.com
 title: Artifact Registry API
 
 apis:
+- name: google.cloud.location.Locations
 - name: google.devtools.artifactregistry.v1.ArtifactRegistry
+- name: google.longrunning.Operations
 
 types:
+- name: google.devtools.artifactregistry.v1.BatchDeleteVersionsMetadata
+- name: google.devtools.artifactregistry.v1.ExportArtifactMetadata
+- name: google.devtools.artifactregistry.v1.ExportArtifactResponse
+- name: google.devtools.artifactregistry.v1.GenericArtifact
+- name: google.devtools.artifactregistry.v1.GoModule
 - name: google.devtools.artifactregistry.v1.ImportAptArtifactsMetadata
 - name: google.devtools.artifactregistry.v1.ImportAptArtifactsResponse
 - name: google.devtools.artifactregistry.v1.ImportYumArtifactsMetadata
 - name: google.devtools.artifactregistry.v1.ImportYumArtifactsResponse
+- name: google.devtools.artifactregistry.v1.KfpArtifact
 - name: google.devtools.artifactregistry.v1.OperationMetadata
 
 documentation:
@@ -34,7 +42,15 @@ documentation:
     description: Gets information about a location.
 
   - selector: google.cloud.location.Locations.ListLocations
-    description: Lists information about the supported locations for this service.
+    description: |-
+      Lists information about the supported locations for this service.
+      This method can be called in two ways:
+
+      *   **List all public locations:** Use the path `GET /v1/locations`.
+      *   **List project-visible locations:** Use the path
+      `GET /v1/projects/{project_id}/locations`. This may include public
+      locations as well as private or other locations specifically visible
+      to the project.
 
 http:
   rules:
@@ -62,11 +78,31 @@ authentication:
       canonical_scopes: |-
         https://www.googleapis.com/auth/cloud-platform,
         https://www.googleapis.com/auth/cloud-platform.read-only
+  - selector: google.devtools.artifactregistry.v1.ArtifactRegistry.BatchDeleteVersions
+    oauth:
+      canonical_scopes: |-
+        https://www.googleapis.com/auth/cloud-platform
+  - selector: google.devtools.artifactregistry.v1.ArtifactRegistry.CreateAttachment
+    oauth:
+      canonical_scopes: |-
+        https://www.googleapis.com/auth/cloud-platform
   - selector: google.devtools.artifactregistry.v1.ArtifactRegistry.CreateRepository
     oauth:
       canonical_scopes: |-
         https://www.googleapis.com/auth/cloud-platform
+  - selector: google.devtools.artifactregistry.v1.ArtifactRegistry.CreateRule
+    oauth:
+      canonical_scopes: |-
+        https://www.googleapis.com/auth/cloud-platform
   - selector: google.devtools.artifactregistry.v1.ArtifactRegistry.CreateTag
+    oauth:
+      canonical_scopes: |-
+        https://www.googleapis.com/auth/cloud-platform
+  - selector: google.devtools.artifactregistry.v1.ArtifactRegistry.DeleteAttachment
+    oauth:
+      canonical_scopes: |-
+        https://www.googleapis.com/auth/cloud-platform
+  - selector: google.devtools.artifactregistry.v1.ArtifactRegistry.DeleteFile
     oauth:
       canonical_scopes: |-
         https://www.googleapis.com/auth/cloud-platform
@@ -78,11 +114,19 @@ authentication:
     oauth:
       canonical_scopes: |-
         https://www.googleapis.com/auth/cloud-platform
+  - selector: google.devtools.artifactregistry.v1.ArtifactRegistry.DeleteRule
+    oauth:
+      canonical_scopes: |-
+        https://www.googleapis.com/auth/cloud-platform
   - selector: google.devtools.artifactregistry.v1.ArtifactRegistry.DeleteTag
     oauth:
       canonical_scopes: |-
         https://www.googleapis.com/auth/cloud-platform
   - selector: google.devtools.artifactregistry.v1.ArtifactRegistry.DeleteVersion
+    oauth:
+      canonical_scopes: |-
+        https://www.googleapis.com/auth/cloud-platform
+  - selector: google.devtools.artifactregistry.v1.ArtifactRegistry.ExportArtifact
     oauth:
       canonical_scopes: |-
         https://www.googleapis.com/auth/cloud-platform
@@ -98,6 +142,14 @@ authentication:
     oauth:
       canonical_scopes: |-
         https://www.googleapis.com/auth/cloud-platform
+  - selector: google.devtools.artifactregistry.v1.ArtifactRegistry.UpdateFile
+    oauth:
+      canonical_scopes: |-
+        https://www.googleapis.com/auth/cloud-platform
+  - selector: google.devtools.artifactregistry.v1.ArtifactRegistry.UpdatePackage
+    oauth:
+      canonical_scopes: |-
+        https://www.googleapis.com/auth/cloud-platform
   - selector: google.devtools.artifactregistry.v1.ArtifactRegistry.UpdateProjectSettings
     oauth:
       canonical_scopes: |-
@@ -106,7 +158,19 @@ authentication:
     oauth:
       canonical_scopes: |-
         https://www.googleapis.com/auth/cloud-platform
+  - selector: google.devtools.artifactregistry.v1.ArtifactRegistry.UpdateRule
+    oauth:
+      canonical_scopes: |-
+        https://www.googleapis.com/auth/cloud-platform
   - selector: google.devtools.artifactregistry.v1.ArtifactRegistry.UpdateTag
+    oauth:
+      canonical_scopes: |-
+        https://www.googleapis.com/auth/cloud-platform
+  - selector: google.devtools.artifactregistry.v1.ArtifactRegistry.UpdateVPCSCConfig
+    oauth:
+      canonical_scopes: |-
+        https://www.googleapis.com/auth/cloud-platform
+  - selector: google.devtools.artifactregistry.v1.ArtifactRegistry.UpdateVersion
     oauth:
       canonical_scopes: |-
         https://www.googleapis.com/auth/cloud-platform

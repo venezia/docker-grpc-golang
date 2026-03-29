@@ -11,6 +11,8 @@ load(
     "@com_google_googleapis_imports//:imports.bzl",
     "ruby_cloud_gapic_library",
     "ruby_gapic_assembly_pkg",
+
+    "nodejs_gapic_combined_pkg"
 )
 
 # Generates a Ruby wrapper client for dataqna.
@@ -22,10 +24,9 @@ ruby_cloud_gapic_library(
     extra_protoc_parameters = [
         "ruby-cloud-gem-name=google-cloud-dataqna",
         "ruby-cloud-env-prefix=BIGQUERY_DATAQNA",
-        "ruby-cloud-wrapper-of=v1alpha:0.0",
+        "ruby-cloud-wrapper-of=v1alpha:0.6",
         "ruby-cloud-path-override=data_qn_a=dataqna",
         "ruby-cloud-namespace-override=Dataqna=DataQnA",
-        "ruby-cloud-product-url=https://cloud.google.com/bigquery/docs/dataqna/",
         "ruby-cloud-api-id=dataqna.googleapis.com",
         "ruby-cloud-api-shortname=dataqna",
     ],
@@ -38,5 +39,14 @@ ruby_gapic_assembly_pkg(
     name = "google-cloud-dataqna-ruby",
     deps = [
         ":dataqna_ruby_wrapper",
+    ],
+)
+
+nodejs_gapic_combined_pkg(
+    name = "google-cloud-dataqna-nodejs",
+    default_version = "v1alpha",
+    templates_excludes = ["package.json", ".Owlbot.yaml"],
+    deps = [
+        "//google/cloud/dataqna/v1alpha:dataqna-v1alpha-nodejs"
     ],
 )

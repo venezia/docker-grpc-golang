@@ -11,6 +11,7 @@ load(
     "@com_google_googleapis_imports//:imports.bzl",
     "ruby_cloud_gapic_library",
     "ruby_gapic_assembly_pkg",
+    "nodejs_gapic_combined_pkg"
 )
 
 # Generates a Ruby wrapper client for eventarc-publishing.
@@ -22,13 +23,14 @@ ruby_cloud_gapic_library(
     extra_protoc_parameters = [
         "ruby-cloud-gem-name=google-cloud-eventarc-publishing",
         "ruby-cloud-env-prefix=EVENTARC",
-        "ruby-cloud-wrapper-of=v1:0.0",
+        "ruby-cloud-wrapper-of=v1:0.8",
         "ruby-cloud-product-url=https://cloud.google.com/eventarc/",
         "ruby-cloud-api-id=eventarcpublishing.googleapis.com",
         "ruby-cloud-api-shortname=eventarcpublishing",
     ],
     ruby_cloud_description = "Eventarc lets you asynchronously deliver events from Google services, SaaS, and your own apps using loosely coupled services that react to state changes. Eventarc requires no infrastructure management — you can optimize productivity and costs while building a modern, event-driven solution.",
     ruby_cloud_title = "Eventarc Publishing",
+    transport = "grpc+rest",
 )
 
 # Open Source package.
@@ -36,5 +38,15 @@ ruby_gapic_assembly_pkg(
     name = "google-cloud-eventarc-publishing-ruby",
     deps = [
         ":publishing_ruby_wrapper",
+    ],
+)
+
+nodejs_gapic_combined_pkg(
+    name = "google-cloud-eventarc-publishing-nodejs",
+    default_version = "v1",
+    release_level = "stable",
+    templates_excludes = ["package.json", ".Owlbot.yaml"],
+    deps = [
+        "//google/cloud/eventarc/publishing/v1:eventarc-publishing-v1-nodejs"
     ],
 )

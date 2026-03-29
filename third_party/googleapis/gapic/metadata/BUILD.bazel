@@ -59,27 +59,22 @@ go_proto_library(
 ##############################################################################
 load(
     "@com_google_googleapis_imports//:imports.bzl",
-    "moved_proto_library",
-    "py_grpc_library",
     "py_proto_library",
-)
-
-moved_proto_library(
-    name = "metadata_moved_proto",
-    srcs = [":metadata_proto"],
-    deps = [
-    ],
+    "py_gapic_assembly_pkg",
 )
 
 py_proto_library(
     name = "metadata_py_proto",
-    deps = [":metadata_moved_proto"],
+    deps = [":metadata_proto"],
 )
 
-py_grpc_library(
-    name = "metadata_py_grpc",
-    srcs = [":metadata_moved_proto"],
-    deps = [":metadata_py_proto"],
+# Open Source Packages
+py_gapic_assembly_pkg(
+    name = "metadata-py",
+    deps = [
+        ":metadata_proto",
+        ":metadata_py_proto",
+    ],
 )
 
 ##############################################################################
@@ -87,7 +82,6 @@ py_grpc_library(
 ##############################################################################
 load(
     "@com_google_googleapis_imports//:imports.bzl",
-    "php_grpc_library",
     "php_proto_library",
 )
 
@@ -96,20 +90,9 @@ php_proto_library(
     deps = [":metadata_proto"],
 )
 
-php_grpc_library(
-    name = "metadata_php_grpc",
-    srcs = [":metadata_proto"],
-    deps = [":metadata_php_proto"],
-)
-
 ##############################################################################
 # Node.js
 ##############################################################################
-load(
-    "@com_google_googleapis_imports//:imports.bzl",
-    "nodejs_gapic_assembly_pkg",
-    "nodejs_gapic_library",
-)
 
 ##############################################################################
 # Ruby

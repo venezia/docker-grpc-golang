@@ -11,6 +11,7 @@ load(
     "@com_google_googleapis_imports//:imports.bzl",
     "ruby_cloud_gapic_library",
     "ruby_gapic_assembly_pkg",
+    "nodejs_gapic_combined_pkg"
 )
 
 # Generates a Ruby wrapper client for cloudprivatecatalog.
@@ -22,13 +23,14 @@ ruby_cloud_gapic_library(
     extra_protoc_parameters = [
         "ruby-cloud-gem-name=google-cloud-private_catalog",
         "ruby-cloud-env-prefix=PRIVATE_CATALOG",
-        "ruby-cloud-wrapper-of=v1beta1:0.0",
+        "ruby-cloud-wrapper-of=v1beta1:0.6",
         "ruby-cloud-product-url=https://cloud.google.com/private-catalog/",
         "ruby-cloud-api-id=cloudprivatecatalog.googleapis.com",
         "ruby-cloud-api-shortname=cloudprivatecatalog",
     ],
     ruby_cloud_description = "With Private Catalog, developers and cloud admins can make their solutions discoverable to their internal enterprise users. Cloud admins can manage their solutions and ensure their users are always launching the latest versions.",
     ruby_cloud_title = "Private Catalog",
+    transport = "grpc+rest",
 )
 
 # Open Source package.
@@ -36,5 +38,14 @@ ruby_gapic_assembly_pkg(
     name = "google-cloud-privatecatalog-ruby",
     deps = [
         ":cloudprivatecatalog_ruby_wrapper",
+    ],
+)
+
+nodejs_gapic_combined_pkg(
+    name = "google-cloud-privatecatalog-nodejs",
+    default_version = "v1beta1",
+    templates_excludes = ["package.json", ".OwlBot.yaml"],
+    deps = [
+        "//google/cloud/privatecatalog/v1beta1:privatecatalog-v1beta1-nodejs"
     ],
 )

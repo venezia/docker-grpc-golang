@@ -1,14 +1,14 @@
-ARG ALPINE_VERSION=3.21
-ARG GO_VERSION=1.23.5
-ARG GRPC_GATEWAY_VERSION=2.26.0
-ARG GRPC_GO_GRPC_VERSION=1.70.0
-ARG PROTOC_GEN_GO_VERSION=1.36.4
+ARG ALPINE_VERSION=3.23
+ARG GO_VERSION=1.26.1
+ARG GRPC_GATEWAY_VERSION=2.28.0
+ARG GRPC_GO_GRPC_VERSION=1.79.3
+ARG PROTOC_GEN_GO_VERSION=1.36.11
 ARG PROTOC_GEN_GOGO_VERSION=1.3.2
 ARG PROTOC_GEN_LINT_VERSION=0.3.0
 ARG PROTOC_GEN_DOC_VERSION=1.5.1
 
 
-FROM golang:${GO_VERSION}-alpine${ALPINE_VERSION} as go_builder
+FROM golang:${GO_VERSION}-alpine${ALPINE_VERSION} AS go_builder
 RUN apk add --no-cache build-base curl git
 ADD ./third_party ./third_party
 
@@ -37,12 +37,8 @@ RUN mkdir -p ${GOPATH}/src/github.com/gogo/protobuf && \
     install -D ./gogoproto/gogo.proto /out/usr/include/github.com/gogo/protobuf/gogoproto/gogo.proto
 
 ARG PROTOC_GEN_LINT_VERSION
-RUN cd / && \
-    curl -sSLO https://github.com/ckaznocha/protoc-gen-lint/releases/download/v${PROTOC_GEN_LINT_VERSION}/protoc-gen-lint_linux_amd64.zip && \
-    mkdir -p /protoc-gen-lint-out && \
-    cd /protoc-gen-lint-out && \
-    unzip -q /protoc-gen-lint_linux_amd64.zip && \
-    install -Ds /protoc-gen-lint-out/protoc-gen-lint /out/usr/bin/protoc-gen-lint
+RUN mkdir -p /out/usr/bin && \
+    GOBIN=/out/usr/bin go install github.com/ckaznocha/protoc-gen-lint@v${PROTOC_GEN_LINT_VERSION}
 
 ARG GRPC_GATEWAY_VERSION
 RUN mkdir -p ${GOPATH}/src/github.com/grpc-ecosystem/grpc-gateway && \
@@ -66,7 +62,7 @@ RUN mkdir -p ${GOPATH}/src/github.com/pseudomuto/protoc-gen-doc && \
     go build -ldflags '-w -s' ./cmd/... && \
     install -Ds ./protoc-gen-doc /out/usr/bin/protoc-gen-doc
 
-FROM golang:${GO_VERSION}-alpine${ALPINE_VERSION} as packer
+FROM golang:${GO_VERSION}-alpine${ALPINE_VERSION} AS packer
 RUN apk add --no-cache curl
 
 # Integrate all output from go_builder
@@ -77,7 +73,7 @@ RUN find /out -name "*.a" -delete -or -name "*.la" -delete
 
 FROM golang:${GO_VERSION}-alpine${ALPINE_VERSION}
 COPY --from=packer /out/ /
-RUN apk add --no-cache bash libstdc++ protoc protobuf-dev
-RUN go install github.com/magefile/mage@v1.15.0
+RUN apk add --no-cache bash libstdc++ protoc protobuf-dev openssh git
+RUN go install github.com/magefile/mage@v1.17.0
 ENTRYPOINT ["/bin/bash"]
 

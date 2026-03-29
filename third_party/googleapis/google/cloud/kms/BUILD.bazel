@@ -11,6 +11,7 @@ load(
     "@com_google_googleapis_imports//:imports.bzl",
     "ruby_cloud_gapic_library",
     "ruby_gapic_assembly_pkg",
+    "nodejs_gapic_combined_pkg"
 )
 
 # Generates a Ruby wrapper client for cloudkms.
@@ -22,7 +23,7 @@ ruby_cloud_gapic_library(
     extra_protoc_parameters = [
         "ruby-cloud-gem-name=google-cloud-kms",
         "ruby-cloud-env-prefix=KMS",
-        "ruby-cloud-wrapper-of=v1:0.11",
+        "ruby-cloud-wrapper-of=v1:0.26",
         "ruby-cloud-product-url=https://cloud.google.com/kms",
         "ruby-cloud-api-id=cloudkms.googleapis.com",
         "ruby-cloud-api-shortname=cloudkms",
@@ -30,6 +31,7 @@ ruby_cloud_gapic_library(
     ],
     ruby_cloud_description = "Manages keys and performs cryptographic operations in a central cloud service, for direct use by other cloud resources and applications.",
     ruby_cloud_title = "Cloud Key Management Service (KMS)",
+    transport = "grpc+rest",
 )
 
 # Open Source package.
@@ -37,5 +39,15 @@ ruby_gapic_assembly_pkg(
     name = "google-cloud-kms-ruby",
     deps = [
         ":cloudkms_ruby_wrapper",
+    ],
+)
+
+nodejs_gapic_combined_pkg(
+    name = "google-cloud-kms-nodejs",
+    default_version = "v1",
+    release_level = "stable",
+    templates_excludes = ["package.json", ".Owlbot.yaml"],
+    deps = [
+        "//google/cloud/kms/v1:kms-v1-nodejs"
     ],
 )

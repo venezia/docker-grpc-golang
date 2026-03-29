@@ -9,14 +9,17 @@
 #    * extra_protoc_file_parameters
 # The complete list of preserved parameters can be found in the source code.
 
+# buildifier: disable=load-on-top
+
 # This is an API workspace, having public visibility by default makes perfect sense.
 package(default_visibility = ["//visibility:public"])
 
 ##############################################################################
 # Common
 ##############################################################################
-load("@rules_proto//proto:defs.bzl", "proto_library")
+# buildifier: disable=same-origin-load
 load("@com_google_googleapis_imports//:imports.bzl", "proto_library_with_info")
+load("@rules_proto//proto:defs.bzl", "proto_library")
 
 proto_library(
     name = "container_proto",
@@ -30,6 +33,7 @@ proto_library(
         "//google/api:resource_proto",
         "//google/rpc:code_proto",
         "//google/rpc:status_proto",
+        "@com_google_protobuf//:duration_proto",
         "@com_google_protobuf//:empty_proto",
         "@com_google_protobuf//:timestamp_proto",
         "@com_google_protobuf//:wrappers_proto",
@@ -47,6 +51,7 @@ proto_library_with_info(
 ##############################################################################
 # Java
 ##############################################################################
+# buildifier: disable=same-origin-load
 load(
     "@com_google_googleapis_imports//:imports.bzl",
     "java_gapic_assembly_gradle_pkg",
@@ -72,10 +77,12 @@ java_gapic_library(
     srcs = [":container_proto_with_info"],
     gapic_yaml = "container_gapic.yaml",
     grpc_service_config = "container_grpc_service_config.json",
+    rest_numeric_enums = True,
     service_yaml = "container_v1.yaml",
     test_deps = [
         ":container_java_grpc",
     ],
+    transport = "grpc+rest",
     deps = [
         ":container_java_proto",
         "//google/api:api_java_proto",
@@ -85,6 +92,7 @@ java_gapic_library(
 java_gapic_test(
     name = "container_java_gapic_test_suite",
     test_classes = [
+        "com.google.cloud.container.v1.ClusterManagerClientHttpJsonTest",
         "com.google.cloud.container.v1.ClusterManagerClientTest",
     ],
     runtime_deps = [":container_java_gapic_test"],
@@ -93,6 +101,8 @@ java_gapic_test(
 # Open Source Packages
 java_gapic_assembly_gradle_pkg(
     name = "google-cloud-container-v1-java",
+    include_samples = True,
+    transport = "grpc+rest",
     deps = [
         ":container_java_gapic",
         ":container_java_grpc",
@@ -104,18 +114,17 @@ java_gapic_assembly_gradle_pkg(
 ##############################################################################
 # Go
 ##############################################################################
+# buildifier: disable=same-origin-load
 load(
     "@com_google_googleapis_imports//:imports.bzl",
     "go_gapic_assembly_pkg",
     "go_gapic_library",
-    "go_proto_library",
-    "go_test",
+    "go_grpc_library",
 )
 
-go_proto_library(
+go_grpc_library(
     name = "container_go_proto",
-    compilers = ["@io_bazel_rules_go//proto:go_grpc"],
-    importpath = "google.golang.org/genproto/googleapis/container/v1",
+    importpath = "cloud.google.com/go/container/apiv1/containerpb",
     protos = [":container_proto"],
     deps = [
         "//google/api:annotations_go_proto",
@@ -130,17 +139,14 @@ go_gapic_library(
     grpc_service_config = "container_grpc_service_config.json",
     importpath = "cloud.google.com/go/container/apiv1;container",
     metadata = True,
+    release_level = "ga",
+    rest_numeric_enums = True,
     service_yaml = "container_v1.yaml",
+    transport = "grpc+rest",
     deps = [
         ":container_go_proto",
+        "@io_bazel_rules_go//proto/wkt:duration_go_proto",
     ],
-)
-
-go_test(
-    name = "container_go_gapic_test",
-    srcs = [":container_go_gapic_srcjar_test"],
-    embed = [":container_go_gapic"],
-    importpath = "cloud.google.com/go/container/apiv1",
 )
 
 # Open Source Packages
@@ -149,6 +155,7 @@ go_gapic_assembly_pkg(
     deps = [
         ":container_go_gapic",
         ":container_go_gapic_srcjar-metadata.srcjar",
+        ":container_go_gapic_srcjar-snippets.srcjar",
         ":container_go_gapic_srcjar-test.srcjar",
         ":container_go_proto",
     ],
@@ -157,10 +164,12 @@ go_gapic_assembly_pkg(
 ##############################################################################
 # Python
 ##############################################################################
+# buildifier: disable=same-origin-load
 load(
     "@com_google_googleapis_imports//:imports.bzl",
     "py_gapic_assembly_pkg",
     "py_gapic_library",
+    "py_test",
 )
 
 py_gapic_library(
@@ -171,6 +180,21 @@ py_gapic_library(
         "python-gapic-namespace=google.cloud",
         "warehouse-package-name=google-cloud-container",
     ],
+    rest_numeric_enums = True,
+    service_yaml = "container_v1.yaml",
+    transport = "grpc+rest",
+    deps = [
+    ],
+)
+
+py_test(
+    name = "container_py_gapic_test",
+    srcs = [
+        "container_py_gapic_pytest.py",
+        "container_py_gapic_test.py",
+    ],
+    legacy_create_init = False,
+    deps = [":container_py_gapic"],
 )
 
 # Open Source Packages
@@ -184,11 +208,11 @@ py_gapic_assembly_pkg(
 ##############################################################################
 # PHP
 ##############################################################################
+# buildifier: disable=same-origin-load
 load(
     "@com_google_googleapis_imports//:imports.bzl",
     "php_gapic_assembly_pkg",
     "php_gapic_library",
-    "php_grpc_library",
     "php_proto_library",
 )
 
@@ -197,19 +221,15 @@ php_proto_library(
     deps = [":container_proto"],
 )
 
-php_grpc_library(
-    name = "container_php_grpc",
-    srcs = [":container_proto"],
-    deps = [":container_php_proto"],
-)
-
 php_gapic_library(
     name = "container_php_gapic",
     srcs = [":container_proto_with_info"],
     grpc_service_config = "container_grpc_service_config.json",
+    migration_mode = "NEW_SURFACE_ONLY",
+    rest_numeric_enums = True,
     service_yaml = "container_v1.yaml",
+    transport = "grpc+rest",
     deps = [
-        ":container_php_grpc",
         ":container_php_proto",
     ],
 )
@@ -219,7 +239,6 @@ php_gapic_assembly_pkg(
     name = "google-cloud-container-v1-php",
     deps = [
         ":container_php_gapic",
-        ":container_php_grpc",
         ":container_php_proto",
     ],
 )
@@ -227,6 +246,7 @@ php_gapic_assembly_pkg(
 ##############################################################################
 # Node.js
 ##############################################################################
+# buildifier: disable=same-origin-load
 load(
     "@com_google_googleapis_imports//:imports.bzl",
     "nodejs_gapic_assembly_pkg",
@@ -240,7 +260,9 @@ nodejs_gapic_library(
     extra_protoc_parameters = ["metadata"],
     grpc_service_config = "container_grpc_service_config.json",
     package = "google.container.v1",
+    rest_numeric_enums = True,
     service_yaml = "container_v1.yaml",
+    transport = "grpc+rest",
     deps = [],
 )
 
@@ -255,6 +277,7 @@ nodejs_gapic_assembly_pkg(
 ##############################################################################
 # Ruby
 ##############################################################################
+# buildifier: disable=same-origin-load
 load(
     "@com_google_googleapis_imports//:imports.bzl",
     "ruby_cloud_gapic_library",
@@ -285,8 +308,11 @@ ruby_cloud_gapic_library(
         "ruby-cloud-product-url=https://cloud.google.com/kubernetes-engine",
     ],
     grpc_service_config = "container_grpc_service_config.json",
+    rest_numeric_enums = True,
     ruby_cloud_description = "Builds and manages container-based applications, powered by the open source Kubernetes technology.",
     ruby_cloud_title = "Kubernetes Engine V1",
+    service_yaml = "container_v1.yaml",
+    transport = "grpc+rest",
     deps = [
         ":container_ruby_grpc",
         ":container_ruby_proto",
@@ -306,6 +332,7 @@ ruby_gapic_assembly_pkg(
 ##############################################################################
 # C#
 ##############################################################################
+# buildifier: disable=same-origin-load
 load(
     "@com_google_googleapis_imports//:imports.bzl",
     "csharp_gapic_assembly_pkg",
@@ -330,7 +357,9 @@ csharp_gapic_library(
     srcs = [":container_proto_with_info"],
     common_resources_config = "@gax_dotnet//:Google.Api.Gax/ResourceNames/CommonResourcesConfig.json",
     grpc_service_config = "container_grpc_service_config.json",
+    rest_numeric_enums = True,
     service_yaml = "container_v1.yaml",
+    transport = "grpc+rest",
     deps = [
         ":container_csharp_grpc",
         ":container_csharp_proto",
@@ -350,6 +379,7 @@ csharp_gapic_assembly_pkg(
 ##############################################################################
 # C++
 ##############################################################################
+# buildifier: disable=same-origin-load
 load(
     "@com_google_googleapis_imports//:imports.bzl",
     "cc_grpc_library",

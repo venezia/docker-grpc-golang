@@ -11,6 +11,7 @@ load(
     "@com_google_googleapis_imports//:imports.bzl",
     "ruby_cloud_gapic_library",
     "ruby_gapic_assembly_pkg",
+    "nodejs_gapic_combined_pkg"
 )
 
 # Generates a Ruby wrapper client for bigquerymigration.
@@ -21,8 +22,8 @@ ruby_cloud_gapic_library(
     srcs = ["//google/cloud/bigquery/migration/v2:migration_proto_with_info"],
     extra_protoc_parameters = [
         "ruby-cloud-gem-name=google-cloud-bigquery-migration",
-        "ruby-cloud-wrapper-of=v2:0.0",
-        "ruby-cloud-product-url=https://cloud.google.com/bigquery/docs/reference/migration",
+        "ruby-cloud-wrapper-of=v2:0.9",
+        "ruby-cloud-product-url=https://cloud.google.com/bigquery/docs/migration-intro",
         "ruby-cloud-api-id=bigquerymigration.googleapis.com",
         "ruby-cloud-api-shortname=bigquerymigration",
     ],
@@ -35,5 +36,16 @@ ruby_gapic_assembly_pkg(
     name = "google-cloud-bigquery-migration-ruby",
     deps = [
         ":migration_ruby_wrapper",
+    ],
+)
+
+nodejs_gapic_combined_pkg(
+    name = "google-cloud-bigquery-migration-nodejs",
+    default_version = "v2",
+    release_level = "stable",
+    templates_excludes = ["package.json", ".OwlBot.yaml"],
+    deps = [
+        "//google/cloud/bigquery/migration/v2:bigquery-migration-v2-nodejs",
+        "//google/cloud/bigquery/migration/v2alpha:bigquery-migration-v2alpha-nodejs"
     ],
 )

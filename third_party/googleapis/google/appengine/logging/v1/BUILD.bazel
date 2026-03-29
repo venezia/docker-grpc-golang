@@ -45,12 +45,11 @@ java_grpc_library(
 ##############################################################################
 load(
     "@com_google_googleapis_imports//:imports.bzl",
-    "go_proto_library",
+    "go_grpc_library",
 )
 
-go_proto_library(
+go_grpc_library(
     name = "logging_go_proto",
-    compilers = ["@io_bazel_rules_go//proto:go_grpc"],
     importpath = "google.golang.org/genproto/googleapis/appengine/logging/v1",
     protos = [":logging_proto"],
     deps = [
@@ -63,8 +62,8 @@ go_proto_library(
 ##############################################################################
 load(
     "@com_google_googleapis_imports//:imports.bzl",
+    "py_gapic_assembly_pkg",
     "py_gapic_library",
-    "py_gapic_assembly_pkg"
 )
 
 py_gapic_library(
@@ -72,9 +71,11 @@ py_gapic_library(
     srcs = [":logging_proto"],
     opt_args = [
         "warehouse-package-name=google-cloud-appengine-logging",
-         "python-gapic-namespace=google.cloud",
+        "python-gapic-namespace=google.cloud",
         "python-gapic-name=appengine_logging",
     ],
+    rest_numeric_enums = False,
+    transport = "grpc",
 )
 
 # Open Source Packages
@@ -90,7 +91,6 @@ py_gapic_assembly_pkg(
 ##############################################################################
 load(
     "@com_google_googleapis_imports//:imports.bzl",
-    "php_grpc_library",
     "php_proto_library",
 )
 
@@ -99,20 +99,9 @@ php_proto_library(
     deps = [":logging_proto"],
 )
 
-php_grpc_library(
-    name = "logging_php_grpc",
-    srcs = [":logging_proto"],
-    deps = [":logging_php_proto"],
-)
-
 ##############################################################################
 # Node.js
 ##############################################################################
-load(
-    "@com_google_googleapis_imports//:imports.bzl",
-    "nodejs_gapic_assembly_pkg",
-    "nodejs_gapic_library",
-)
 
 ##############################################################################
 # Ruby

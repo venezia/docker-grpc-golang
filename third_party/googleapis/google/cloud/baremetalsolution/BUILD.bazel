@@ -11,6 +11,7 @@ load(
     "@com_google_googleapis_imports//:imports.bzl",
     "ruby_cloud_gapic_library",
     "ruby_gapic_assembly_pkg",
+    "nodejs_gapic_combined_pkg"
 )
 
 # Generates a Ruby wrapper client for baremetalsolution.
@@ -24,10 +25,11 @@ ruby_cloud_gapic_library(
         "ruby-cloud-api-shortname=baremetalsolution",
         "ruby-cloud-gem-name=google-cloud-bare_metal_solution",
         "ruby-cloud-product-url=https://cloud.google.com/bare-metal/",
-        "ruby-cloud-wrapper-of=v2:0.0",
+        "ruby-cloud-wrapper-of=v2:1.0",
     ],
     ruby_cloud_description = "Bare Metal Solution is a managed solution that provides purpose-built HPE or Atos bare-metal servers in regional extensions that are connected to Google Cloud by a managed, high-performance connection with a low-latency network fabric.",
     ruby_cloud_title = "Bare Metal Solution",
+    transport = "grpc+rest",
 )
 
 # Open Source package.
@@ -35,5 +37,15 @@ ruby_gapic_assembly_pkg(
     name = "google-cloud-baremetalsolution-ruby",
     deps = [
         ":baremetalsolution_ruby_wrapper",
+    ],
+)
+
+nodejs_gapic_combined_pkg(
+    name = "google-cloud-baremetalsolution-nodejs",
+    default_version = "v2",
+    release_level = "stable",
+    templates_excludes = ["package.json", ".OwlBot.yaml"],
+    deps = [
+        "//google/cloud/baremetalsolution/v2:baremetalsolution-v2-nodejs"
     ],
 )

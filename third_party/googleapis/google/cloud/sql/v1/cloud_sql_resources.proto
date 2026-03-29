@@ -1,4 +1,4 @@
-// Copyright 2021 Google LLC
+// Copyright 2026 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,15 +17,16 @@ syntax = "proto3";
 package google.cloud.sql.v1;
 
 import "google/api/field_behavior.proto";
+import "google/api/field_info.proto";
+import "google/api/resource.proto";
+import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/wrappers.proto";
 
-option go_package = "google.golang.org/genproto/googleapis/cloud/sql/v1;sql";
+option go_package = "cloud.google.com/go/sql/apiv1/sqlpb;sqlpb";
 option java_multiple_files = true;
 option java_outer_classname = "CloudSqlResourcesProto";
 option java_package = "com.google.cloud.sql.v1";
-
-// LINT: LEGACY_NAMES
 
 // An entry for an Access Control list.
 message AclEntry {
@@ -34,13 +35,13 @@ message AclEntry {
 
   // The time when this access control entry expires in
   // [RFC 3339](https://tools.ietf.org/html/rfc3339) format, for example
-  // **2012-11-15T16:19:00.094Z**.
+  // `2012-11-15T16:19:00.094Z`.
   google.protobuf.Timestamp expiration_time = 2;
 
   // Optional. A label to identify this entry.
   string name = 3 [(google.api.field_behavior) = OPTIONAL];
 
-  // This is always **sql#aclEntry**.
+  // This is always `sql#aclEntry`.
   string kind = 4;
 }
 
@@ -53,6 +54,18 @@ message ApiWarning {
     // Warning when one or more regions are not reachable.  The returned result
     // set may be incomplete.
     REGION_UNREACHABLE = 1;
+
+    // Warning when user provided maxResults parameter exceeds the limit.  The
+    // returned result set may be incomplete.
+    MAX_RESULTS_EXCEEDS_LIMIT = 2;
+
+    // Warning when user tries to create/update a user with credentials that
+    // have previously been compromised by a public data breach.
+    COMPROMISED_CREDENTIALS = 3;
+
+    // Warning when the operation succeeds but some non-critical workflow state
+    // failed.
+    INTERNAL_STATE_FAILURE = 4;
   }
 
   // Code to uniquely identify the warning type.
@@ -88,14 +101,54 @@ message BackupRetentionSettings {
 
 // Database instance backup configuration.
 message BackupConfiguration {
+  // This value contains the storage location of the transactional logs
+  // used to perform point-in-time recovery (PITR) for the database.
+  enum TransactionalLogStorageState {
+    // Unspecified.
+    TRANSACTIONAL_LOG_STORAGE_STATE_UNSPECIFIED = 0;
+
+    // The transaction logs used for PITR for the instance are stored
+    // on a data disk.
+    DISK = 1;
+
+    // The transaction logs used for PITR for the instance are switching from
+    // being stored on a data disk to being stored in Cloud Storage.
+    // Only applicable to MySQL.
+    SWITCHING_TO_CLOUD_STORAGE = 2;
+
+    // The transaction logs used for PITR for the instance are now stored
+    // in Cloud Storage. Previously, they were stored on a data disk.
+    // Only applicable to MySQL.
+    SWITCHED_TO_CLOUD_STORAGE = 3;
+
+    // The transaction logs used for PITR for the instance are stored in
+    // Cloud Storage. Only applicable to MySQL and PostgreSQL.
+    CLOUD_STORAGE = 4;
+  }
+
+  // Backup tier that manages the backups for the instance.
+  enum BackupTier {
+    // Unspecified.
+    BACKUP_TIER_UNSPECIFIED = 0;
+
+    // Instance is managed by Cloud SQL.
+    STANDARD = 1;
+
+    // Deprecated: ADVANCED is deprecated. Please use ENHANCED instead.
+    ADVANCED = 2 [deprecated = true];
+
+    // Instance is managed by Google Cloud Backup and DR Service.
+    ENHANCED = 3;
+  }
+
   // Start time for the daily backup configuration in UTC timezone in the 24
-  // hour format - **HH:MM**.
+  // hour format - `HH:MM`.
   string start_time = 1;
 
   // Whether this configuration is enabled.
   google.protobuf.BoolValue enabled = 2;
 
-  // This is always **sql#backupConfiguration**.
+  // This is always `sql#backupConfiguration`.
   string kind = 3;
 
   // (MySQL only) Whether binary log is enabled. If backup configuration is
@@ -108,7 +161,7 @@ message BackupConfiguration {
   // Location of the backup
   string location = 6;
 
-  // (Postgres only) Whether point in time recovery is enabled.
+  // Whether point in time recovery is enabled.
   google.protobuf.BoolValue point_in_time_recovery_enabled = 7;
 
   // Backup retention settings.
@@ -117,6 +170,65 @@ message BackupConfiguration {
   // The number of days of transaction logs we retain for point in time
   // restore, from 1-7.
   google.protobuf.Int32Value transaction_log_retention_days = 9;
+
+  // Output only. This value contains the storage location of transactional logs
+  // used to perform point-in-time recovery (PITR) for the database.
+  optional TransactionalLogStorageState transactional_log_storage_state = 10
+      [(google.api.field_behavior) = OUTPUT_ONLY];
+
+  // Output only. Backup tier that manages the backups for the instance.
+  optional BackupTier backup_tier = 11
+      [(google.api.field_behavior) = OUTPUT_ONLY];
+}
+
+// Perform disk shrink context.
+message PerformDiskShrinkContext {
+  // The target disk shrink size in GigaBytes.
+  int64 target_size_gb = 1;
+}
+
+// Structured PreCheckResponse containing message, type, and required
+// actions.
+message PreCheckResponse {
+  // The type of message which can be an info, a warning, or an error that
+  // requires user intervention.
+  enum MessageType {
+    // Default unspecified value to prevent unintended behavior changes.
+    MESSAGE_TYPE_UNSPECIFIED = 0;
+
+    // General informational messages that don't require action.
+    INFO = 1;
+
+    // Warnings that might impact the upgrade but don't block it.
+    WARNING = 2;
+
+    // Errors that a user must resolve before proceeding with the upgrade.
+    ERROR = 3;
+  }
+
+  // The message to be displayed to the user.
+  optional string message = 2;
+
+  // The type of message whether it is an info, warning, or error.
+  optional MessageType message_type = 3;
+
+  // The actions that the user needs to take. Use repeated for multiple
+  // actions.
+  repeated string actions_required = 4;
+}
+
+// Pre-check major version upgrade context.
+message PreCheckMajorVersionUpgradeContext {
+  // Required. The target database version to upgrade to.
+  SqlDatabaseVersion target_database_version = 1
+      [(google.api.field_behavior) = REQUIRED];
+
+  // Output only. The responses from the precheck operation.
+  repeated PreCheckResponse pre_check_response = 2
+      [(google.api.field_behavior) = OUTPUT_ONLY];
+
+  // Optional. This is always `sql#preCheckMajorVersionUpgradeContext`.
+  string kind = 3 [(google.api.field_behavior) = OPTIONAL];
 }
 
 // Backup context.
@@ -124,13 +236,17 @@ message BackupContext {
   // The identifier of the backup.
   int64 backup_id = 1;
 
-  // This is always **sql#backupContext**.
+  // This is always `sql#backupContext`.
   string kind = 2;
+
+  // The name of the backup.
+  // Format: projects/{project}/backups/{backup}
+  string name = 3;
 }
 
 // Represents a SQL database on the Cloud SQL instance.
 message Database {
-  // This is always **sql#database**.
+  // This is always `sql#database`.
   string kind = 1;
 
   // The Cloud SQL charset value.
@@ -180,8 +296,8 @@ message DatabaseFlags {
   // in the Cloud SQL documentation.
   string name = 1;
 
-  // The value of the flag. Booleans are set to **on** for true
-  // and **off** for false. This field must be omitted if the flag
+  // The value of the flag. Boolean flags are set to `on` for true
+  // and `off` for false. This field must be omitted if the flag
   // doesn't take a value.
   string value = 2;
 }
@@ -220,7 +336,7 @@ message InstanceReference {
 // Read-replica configuration for connecting to the on-premises primary
 // instance.
 message DemoteMasterConfiguration {
-  // This is always **sql#demoteMasterConfiguration**.
+  // This is always `sql#demoteMasterConfiguration`.
   string kind = 1;
 
   // MySQL specific configuration when replicating from a MySQL on-premises
@@ -228,13 +344,13 @@ message DemoteMasterConfiguration {
   // username, password, certificates, and keys are not stored in the instance
   // metadata. The configuration information is used only to set up the
   // replication connection and is stored by MySQL in a file named
-  // **master.info** in the data directory.
+  // `master.info` in the data directory.
   DemoteMasterMySqlReplicaConfiguration mysql_replica_configuration = 2;
 }
 
 // Read-replica configuration specific to MySQL databases.
 message DemoteMasterMySqlReplicaConfiguration {
-  // This is always **sql#demoteMasterMysqlReplicaConfiguration**.
+  // This is always `sql#demoteMasterMysqlReplicaConfiguration`.
   string kind = 1;
 
   // The username for the replication connection.
@@ -243,7 +359,7 @@ message DemoteMasterMySqlReplicaConfiguration {
   // The password for the replication connection.
   string password = 3;
 
-  // PEM representation of the replica's private key. The corresponsing public
+  // PEM representation of the replica's private key. The corresponding public
   // key is encoded in the client's certificate. The format of the replica's
   // private key can be either PKCS #1 or PKCS #8.
   string client_key = 4;
@@ -253,6 +369,22 @@ message DemoteMasterMySqlReplicaConfiguration {
 
   // PEM representation of the trusted CA's x509 certificate.
   string ca_certificate = 6;
+}
+
+enum SqlFileType {
+  // Unknown file type.
+  SQL_FILE_TYPE_UNSPECIFIED = 0;
+
+  // File containing SQL statements.
+  SQL = 1;
+
+  // File in CSV format.
+  CSV = 2;
+
+  BAK = 4;
+
+  // TDE certificate.
+  TDE = 8;
 }
 
 // Database instance export context.
@@ -280,15 +412,27 @@ message ExportContext {
   message SqlExportOptions {
     // Options for exporting from MySQL.
     message MysqlExportOptions {
-      // Option to include SQL statement required to set up replication.
-      // *  If set to **1**, the dump file includes
-      //  a CHANGE MASTER TO statement with the binary log coordinates,
-      //  and --set-gtid-purged is set to ON.
-      // *  If set to **2**, the CHANGE MASTER TO statement is written as
-      //  a SQL comment and has no effect.
-      // *  If set to any value other than **1**, --set-gtid-purged is set
-      // to OFF.
+      // Option to include SQL statement required to set up replication. If set
+      // to `1`, the dump file includes a CHANGE MASTER TO statement with the
+      // binary log coordinates, and --set-gtid-purged is set to ON. If set to
+      // `2`, the CHANGE MASTER TO statement is written as a SQL comment and
+      // has no effect. If set to any value other than `1`, --set-gtid-purged
+      // is set to OFF.
       google.protobuf.Int32Value master_data = 1;
+    }
+
+    // Options for exporting from a Cloud SQL for PostgreSQL instance.
+    message PostgresExportOptions {
+      // Optional. Use this option to include DROP <code>&lt;object&gt;</code>
+      // SQL statements. Use these statements to delete database objects before
+      // running the import operation.
+      google.protobuf.BoolValue clean = 1
+          [(google.api.field_behavior) = OPTIONAL];
+
+      // Optional. Option to include an IF EXISTS SQL statement with each DROP
+      // statement produced by clean.
+      google.protobuf.BoolValue if_exists = 2
+          [(google.api.field_behavior) = OPTIONAL];
     }
 
     // Tables to export, or that were exported, from the specified database. If
@@ -300,51 +444,154 @@ message ExportContext {
     google.protobuf.BoolValue schema_only = 2;
 
     MysqlExportOptions mysql_export_options = 3;
+
+    // Optional. The number of threads to use for parallel export.
+    google.protobuf.Int32Value threads = 4
+        [(google.api.field_behavior) = OPTIONAL];
+
+    // Optional. Whether or not the export should be parallel.
+    google.protobuf.BoolValue parallel = 5
+        [(google.api.field_behavior) = OPTIONAL];
+
+    // Optional. Options for exporting from a Cloud SQL for PostgreSQL instance.
+    PostgresExportOptions postgres_export_options = 6
+        [(google.api.field_behavior) = OPTIONAL];
+  }
+
+  // Options for exporting BAK files (SQL Server-only)
+  message SqlBakExportOptions {
+    // Whether or not the export should be striped.
+    google.protobuf.BoolValue striped = 1;
+
+    // Option for specifying how many stripes to use for the export.
+    // If blank, and the value of the striped field is true,
+    // the number of stripes is automatically chosen.
+    google.protobuf.Int32Value stripe_count = 2;
+
+    // Type of this bak file will be export, FULL or DIFF, SQL Server only
+    BakType bak_type = 4;
+
+    // Deprecated: copy_only is deprecated. Use differential_base instead
+    google.protobuf.BoolValue copy_only = 5 [deprecated = true];
+
+    // Whether or not the backup can be used as a differential base
+    // copy_only backup can not be served as differential base
+    google.protobuf.BoolValue differential_base = 6;
+
+    // Optional. The begin timestamp when transaction log will be included in
+    // the export operation. [RFC 3339](https://tools.ietf.org/html/rfc3339)
+    // format (for example, `2023-10-01T16:19:00.094`) in UTC. When omitted, all
+    // available logs from the beginning of retention period will be included.
+    // Only applied to Cloud SQL for SQL Server.
+    google.protobuf.Timestamp export_log_start_time = 7
+        [(google.api.field_behavior) = OPTIONAL];
+
+    // Optional. The end timestamp when transaction log will be included in the
+    // export operation. [RFC 3339](https://tools.ietf.org/html/rfc3339) format
+    // (for example, `2023-10-01T16:19:00.094`) in UTC. When omitted, all
+    // available logs until current time will be included. Only applied to Cloud
+    // SQL for SQL Server.
+    google.protobuf.Timestamp export_log_end_time = 8
+        [(google.api.field_behavior) = OPTIONAL];
+  }
+
+  message SqlTdeExportOptions {
+    // Required. Path to the TDE certificate public key
+    // in the form gs://bucketName/fileName.
+    // The instance must have write access to the bucket.
+    // Applicable only for SQL Server instances.
+    string certificate_path = 1 [(google.api.field_behavior) = REQUIRED];
+
+    // Required. Path to the TDE certificate private key
+    // in the form gs://bucketName/fileName.
+    // The instance must have write access to the location.
+    // Applicable only for SQL Server instances.
+    string private_key_path = 2 [(google.api.field_behavior) = REQUIRED];
+
+    // Required. Password that encrypts the private key.
+    string private_key_password = 3 [(google.api.field_behavior) = REQUIRED];
+
+    // Required. Certificate name.
+    // Applicable only for SQL Server instances.
+    string name = 5 [(google.api.field_behavior) = REQUIRED];
   }
 
   // The path to the file in Google Cloud Storage where the export will be
-  // stored. The URI is in the form **gs://bucketName/fileName**. If the file
+  // stored. The URI is in the form `gs://bucketName/fileName`. If the file
   // already exists, the request succeeds, but the operation fails. If
-  // **fileType** is **SQL** and the filename ends with .gz,
+  // `fileType` is `SQL` and the filename ends with .gz,
   // the contents are compressed.
   string uri = 1;
 
-  // Databases to be exported.
-  // *  **MySQL instances:** If **fileType** is **SQL** and no database is
-  // specified, all databases are exported, except for the **mysql** system
-  // database. If **fileType** is **CSV**, you can specify one database,
+  // Databases to be exported. <br /> `MySQL instances:` If
+  // `fileType` is `SQL` and no database is specified, all
+  // databases are exported, except for the `mysql` system database.
+  // If `fileType` is `CSV`, you can specify one database,
   // either by using this property or by using the
-  // **csvExportOptions.selectQuery** property, which takes precedence
-  // over this property.
-  // *  **PostgreSQL instances:** You must specify one database to be exported.
-  // If **fileType** is **CSV**, this database must match the one specified in
-  // the **csvExportOptions.selectQuery** property.
-  // *  **SQL Server instances:** You must specify one database to be exported,
-  // and the **fileType** must be **BAK**.
+  // `csvExportOptions.selectQuery` property, which takes precedence
+  // over this property. <br /> `PostgreSQL instances:` If you don't specify a
+  // database by name, all user databases in the instance are exported.
+  // This excludes system databases and Cloud SQL databases used to manage
+  // internal operations. Exporting all user databases is only available for
+  // directory-formatted parallel export. If `fileType` is `CSV`,
+  // this database must match the one specified in the
+  // `csvExportOptions.selectQuery` property. <br /> `SQL Server
+  // instances:` You must specify one database to be exported, and the
+  // `fileType` must be `BAK`.
   repeated string databases = 2;
 
-  // This is always **sql#exportContext**.
+  // This is always `sql#exportContext`.
   string kind = 3;
 
   // Options for exporting data as SQL statements.
   SqlExportOptions sql_export_options = 4;
 
-  // Options for exporting data as CSV. **MySQL** and **PostgreSQL**
+  // Options for exporting data as CSV. `MySQL` and `PostgreSQL`
   // instances only.
   SqlCsvExportOptions csv_export_options = 5;
 
   // The file type for the specified uri.
-  // *  **SQL**: The file contains SQL statements.
-  // *  **CSV**: The file contains CSV data.
-  // *  **BAK**: The file contains backup data for a SQL Server instance.
   SqlFileType file_type = 6;
 
-  // Option for export offload.
+  // Whether to perform a serverless export.
   google.protobuf.BoolValue offload = 8;
+
+  // Options for exporting data as BAK files.
+  SqlBakExportOptions bak_export_options = 9;
+
+  // Optional. Export parameters specific to SQL Server TDE certificates
+  SqlTdeExportOptions tde_export_options = 10
+      [(google.api.field_behavior) = OPTIONAL];
 }
 
 // Database instance import context.
 message ImportContext {
+  message SqlImportOptions {
+    message PostgresImportOptions {
+      // Optional. The --clean flag for the pg_restore utility. This flag
+      // applies only if you enabled Cloud SQL to import files in parallel.
+      google.protobuf.BoolValue clean = 1
+          [(google.api.field_behavior) = OPTIONAL];
+
+      // Optional. The --if-exists flag for the pg_restore utility. This flag
+      // applies only if you enabled Cloud SQL to import files in parallel.
+      google.protobuf.BoolValue if_exists = 2
+          [(google.api.field_behavior) = OPTIONAL];
+    }
+
+    // Optional. The number of threads to use for parallel import.
+    google.protobuf.Int32Value threads = 1
+        [(google.api.field_behavior) = OPTIONAL];
+
+    // Optional. Whether or not the import should be parallel.
+    google.protobuf.BoolValue parallel = 2
+        [(google.api.field_behavior) = OPTIONAL];
+
+    // Optional. Options for importing from a Cloud SQL for PostgreSQL instance.
+    PostgresImportOptions postgres_import_options = 3
+        [(google.api.field_behavior) = OPTIONAL];
+  }
+
   message SqlCsvImportOptions {
     // The table to which CSV data is imported.
     string table = 1;
@@ -372,39 +619,96 @@ message ImportContext {
   message SqlBakImportOptions {
     message EncryptionOptions {
       // Path to the Certificate (.cer) in Cloud Storage, in the form
-      // **gs://bucketName/fileName**. The instance must have
+      // `gs://bucketName/fileName`. The instance must have
       // write permissions to the bucket and read access to the file.
       string cert_path = 1;
 
       // Path to the Certificate Private Key (.pvk)  in Cloud Storage, in the
-      // form **gs://bucketName/fileName**. The instance must have
+      // form `gs://bucketName/fileName`. The instance must have
       // write permissions to the bucket and read access to the file.
       string pvk_path = 2;
 
       // Password that encrypts the private key
       string pvk_password = 3;
+
+      // Optional. Whether the imported file remains encrypted.
+      google.protobuf.BoolValue keep_encrypted = 5
+          [(google.api.field_behavior) = OPTIONAL];
     }
 
     EncryptionOptions encryption_options = 1;
+
+    // Whether or not the backup set being restored is striped.
+    // Applies only to Cloud SQL for SQL Server.
+    google.protobuf.BoolValue striped = 2;
+
+    // Whether or not the backup importing will restore database
+    // with NORECOVERY option.
+    // Applies only to Cloud SQL for SQL Server.
+    google.protobuf.BoolValue no_recovery = 4;
+
+    // Whether or not the backup importing request will just bring database
+    // online without downloading Bak content only one of "no_recovery" and
+    // "recovery_only" can be true otherwise error will return. Applies only to
+    // Cloud SQL for SQL Server.
+    google.protobuf.BoolValue recovery_only = 5;
+
+    // Type of the bak content, FULL or DIFF
+    BakType bak_type = 6;
+
+    // Optional. The timestamp when the import should stop. This timestamp is in
+    // the [RFC 3339](https://tools.ietf.org/html/rfc3339) format (for example,
+    // `2023-10-01T16:19:00.094`). This field is equivalent to the STOPAT
+    // keyword and applies to Cloud SQL for SQL Server only.
+    google.protobuf.Timestamp stop_at = 7
+        [(google.api.field_behavior) = OPTIONAL];
+
+    // Optional. The marked transaction where the import should stop. This field
+    // is equivalent to the STOPATMARK keyword and applies to Cloud SQL for SQL
+    // Server only.
+    string stop_at_mark = 8 [(google.api.field_behavior) = OPTIONAL];
+  }
+
+  message SqlTdeImportOptions {
+    // Required. Path to the TDE certificate public key
+    // in the form gs://bucketName/fileName.
+    // The instance must have read access to the file.
+    // Applicable only for SQL Server instances.
+    string certificate_path = 1 [(google.api.field_behavior) = REQUIRED];
+
+    // Required. Path to the TDE certificate private key
+    // in the form gs://bucketName/fileName.
+    // The instance must have read access to the file.
+    // Applicable only for SQL Server instances.
+    string private_key_path = 2 [(google.api.field_behavior) = REQUIRED];
+
+    // Required. Password that encrypts the private key.
+    string private_key_password = 3 [(google.api.field_behavior) = REQUIRED];
+
+    // Required. Certificate name.
+    // Applicable only for SQL Server instances.
+    string name = 5 [(google.api.field_behavior) = REQUIRED];
   }
 
   // Path to the import file in Cloud Storage, in the form
-  // **gs://bucketName/fileName**. Compressed gzip files (.gz) are supported
-  // when **fileType** is **SQL**. The instance must have
+  // `gs://bucketName/fileName`. Compressed gzip files (.gz) are supported
+  // when `fileType` is `SQL`. The instance must have
   // write permissions to the bucket and read access to the file.
   string uri = 1;
 
-  // The target database for the import. If **fileType** is **SQL**, this field
+  // The target database for the import. If `fileType` is `SQL`, this field
   // is required only if the import file does not specify a database, and is
-  // overridden by any database specification in the import file. If
-  // **fileType** is **CSV**, one database must be specified.
+  // overridden by any database specification in the import file. For entire
+  // instance parallel import operations, the database is overridden by the
+  // database name stored in subdirectory name. If
+  // `fileType` is `CSV`, one database must be specified.
   string database = 2;
 
-  // This is always **sql#importContext**.
+  // This is always `sql#importContext`.
   string kind = 3;
 
-  // The file type for the specified uri. <br>**SQL**: The file
-  // contains SQL statements. <br>**CSV**: The file contains CSV data.
+  // The file type for the specified uri.\`SQL`: The file
+  // contains SQL statements. \`CSV`: The file contains CSV data.
   SqlFileType file_type = 4;
 
   // Options for importing data as CSV.
@@ -415,48 +719,246 @@ message ImportContext {
 
   // Import parameters specific to SQL Server .BAK files
   SqlBakImportOptions bak_import_options = 7;
+
+  // Optional. Options for importing data from SQL statements.
+  SqlImportOptions sql_import_options = 8
+      [(google.api.field_behavior) = OPTIONAL];
+
+  // Optional. Import parameters specific to SQL Server TDE certificates
+  SqlTdeImportOptions tde_import_options = 9
+      [(google.api.field_behavior) = OPTIONAL];
 }
 
-enum SqlFileType {
-  // Unknown file type.
-  SQL_FILE_TYPE_UNSPECIFIED = 0;
+enum BakType {
+  // Default type.
+  BAK_TYPE_UNSPECIFIED = 0;
 
-  // File containing SQL statements.
-  SQL = 1;
+  // Full backup.
+  FULL = 1;
 
-  // File in CSV format.
-  CSV = 2;
+  // Differential backup.
+  DIFF = 2;
 
-  BAK = 4;
+  // Transaction Log backup
+  TLOG = 3;
 }
 
 // IP Management configuration.
 message IpConfiguration {
+  // The SSL options for database connections.
+  enum SslMode {
+    // The SSL mode is unknown.
+    SSL_MODE_UNSPECIFIED = 0;
+
+    // Allow non-SSL/non-TLS and SSL/TLS connections.
+    // For SSL connections to MySQL and PostgreSQL, the client certificate
+    // isn't verified.
+    //
+    // When this value is used, the legacy `require_ssl` flag must be false or
+    // cleared to avoid a conflict between the values of the two flags.
+    ALLOW_UNENCRYPTED_AND_ENCRYPTED = 1;
+
+    // Only allow connections encrypted with SSL/TLS.
+    // For SSL connections to MySQL and PostgreSQL, the client certificate
+    // isn't verified.
+    //
+    // When this value is used, the legacy `require_ssl` flag must be false or
+    // cleared to avoid a conflict between the values of the two flags.
+    ENCRYPTED_ONLY = 2;
+
+    // Only allow connections encrypted with SSL/TLS and with valid
+    // client certificates.
+    //
+    // When this value is used, the legacy `require_ssl` flag must be true or
+    // cleared to avoid the conflict between values of two flags.
+    // PostgreSQL clients or users that connect using IAM database
+    // authentication must use either the
+    // [Cloud SQL Auth
+    // Proxy](https://cloud.google.com/sql/docs/postgres/connect-auth-proxy) or
+    // [Cloud SQL
+    // Connectors](https://cloud.google.com/sql/docs/postgres/connect-connectors)
+    // to enforce client identity verification.
+    //
+    // Only applicable to MySQL and PostgreSQL. Not applicable to SQL Server.
+    TRUSTED_CLIENT_CERTIFICATE_REQUIRED = 3;
+  }
+
+  // Various Certificate Authority (CA) modes for certificate signing.
+  enum CaMode {
+    // CA mode is unspecified. It is effectively the same as
+    // `GOOGLE_MANAGED_INTERNAL_CA`.
+    CA_MODE_UNSPECIFIED = 0;
+
+    // Google-managed self-signed internal CA.
+    GOOGLE_MANAGED_INTERNAL_CA = 1;
+
+    // Google-managed regional CA part of root CA hierarchy hosted on Google
+    // Cloud's Certificate Authority Service (CAS).
+    GOOGLE_MANAGED_CAS_CA = 2;
+
+    // Customer-managed CA hosted on Google Cloud's Certificate Authority
+    // Service (CAS).
+    CUSTOMER_MANAGED_CAS_CA = 3;
+  }
+
+  // Settings for automatic server certificate rotation.
+  enum ServerCertificateRotationMode {
+    // Unspecified: no automatic server certificate rotation.
+    SERVER_CERTIFICATE_ROTATION_MODE_UNSPECIFIED = 0;
+
+    // No automatic server certificate rotation. The user must [manage server
+    // certificate
+    // rotation](/sql/docs/mysql/manage-ssl-instance#rotate-server-certificate-cas)
+    // on their side.
+    NO_AUTOMATIC_ROTATION = 1;
+
+    // Automatic server certificate rotation during Cloud SQL scheduled
+    // maintenance or self-service maintenance updates. Requires
+    // `server_ca_mode` to be `GOOGLE_MANAGED_CAS_CA` or
+    // `CUSTOMER_MANAGED_CAS_CA`.
+    AUTOMATIC_ROTATION_DURING_MAINTENANCE = 2;
+  }
+
   // Whether the instance is assigned a public IP address or not.
   google.protobuf.BoolValue ipv4_enabled = 1;
 
   // The resource link for the VPC network from which the Cloud SQL instance is
   // accessible for private IP. For example,
-  // **/projects/myProject/global/networks/default**. This setting can
+  // `/projects/myProject/global/networks/default`. This setting can
   // be updated, but it cannot be removed after it is set.
   string private_network = 2;
 
-  // Whether SSL connections over IP are enforced or not.
+  // Use `ssl_mode` instead.
+  //
+  // Whether SSL/TLS connections over IP are enforced.
+  // If set to false, then allow both non-SSL/non-TLS and SSL/TLS connections.
+  // For SSL/TLS connections, the client certificate won't be verified. If
+  // set to true, then only allow connections encrypted with SSL/TLS and with
+  // valid client certificates. If you want to enforce SSL/TLS without enforcing
+  // the requirement for valid client certificates, then use the `ssl_mode` flag
+  // instead of the `require_ssl` flag.
   google.protobuf.BoolValue require_ssl = 3;
 
   // The list of external networks that are allowed to connect to the instance
   // using the IP. In 'CIDR' notation, also known as 'slash' notation (for
-  // example: **192.168.100.0/24**).
+  // example: `157.197.200.0/24`).
   repeated AclEntry authorized_networks = 4;
 
-  // The name of the allocated ip range for the private ip CloudSQL instance.
+  // The name of the allocated ip range for the private ip Cloud SQL instance.
   // For example: "google-managed-services-default". If set, the instance ip
   // will be created in the allocated range. The range name must comply with
   // [RFC 1035](https://tools.ietf.org/html/rfc1035). Specifically, the name
   // must be 1-63 characters long and match the regular expression
   // `[a-z]([-a-z0-9]*[a-z0-9])?.`
-  // Reserved for future use.
   string allocated_ip_range = 6;
+
+  // Controls connectivity to private IP instances from Google services,
+  // such as BigQuery.
+  google.protobuf.BoolValue enable_private_path_for_google_cloud_services = 7;
+
+  // Specify how SSL/TLS is enforced in database connections. If you must use
+  // the `require_ssl` flag for backward compatibility, then only the following
+  // value pairs are valid:
+  //
+  // For PostgreSQL and MySQL:
+  //
+  // * `ssl_mode=ALLOW_UNENCRYPTED_AND_ENCRYPTED` and `require_ssl=false`
+  // * `ssl_mode=ENCRYPTED_ONLY` and `require_ssl=false`
+  // * `ssl_mode=TRUSTED_CLIENT_CERTIFICATE_REQUIRED` and `require_ssl=true`
+  //
+  // For SQL Server:
+  //
+  // * `ssl_mode=ALLOW_UNENCRYPTED_AND_ENCRYPTED` and `require_ssl=false`
+  // * `ssl_mode=ENCRYPTED_ONLY` and `require_ssl=true`
+  //
+  // The value of `ssl_mode` has priority over the value of `require_ssl`.
+  //
+  // For example, for the pair `ssl_mode=ENCRYPTED_ONLY` and
+  // `require_ssl=false`, `ssl_mode=ENCRYPTED_ONLY` means accept only SSL
+  // connections, while `require_ssl=false` means accept both non-SSL
+  // and SSL connections. In this case, MySQL and PostgreSQL databases respect
+  // `ssl_mode` and accepts only SSL connections.
+  SslMode ssl_mode = 8;
+
+  // PSC settings for this instance.
+  optional PscConfig psc_config = 9;
+
+  // Specify what type of CA is used for the server certificate.
+  optional CaMode server_ca_mode = 10;
+
+  // Optional. Custom Subject Alternative Name(SAN)s for a Cloud SQL instance.
+  repeated string custom_subject_alternative_names = 11
+      [(google.api.field_behavior) = OPTIONAL];
+
+  // Optional. The resource name of the server CA pool for an instance with
+  // `CUSTOMER_MANAGED_CAS_CA` as the `server_ca_mode`.
+  // Format: projects/{PROJECT}/locations/{REGION}/caPools/{CA_POOL_ID}
+  optional string server_ca_pool = 12 [(google.api.field_behavior) = OPTIONAL];
+
+  // Optional. Controls the automatic server certificate rotation feature. This
+  // feature is disabled by default. When enabled, the server certificate will
+  // be automatically rotated during Cloud SQL scheduled maintenance or
+  // self-service maintenance updates up to six months before it expires. This
+  // setting can only be set if server_ca_mode is either GOOGLE_MANAGED_CAS_CA
+  // or CUSTOMER_MANAGED_CAS_CA.
+  optional ServerCertificateRotationMode server_certificate_rotation_mode = 16
+      [(google.api.field_behavior) = OPTIONAL];
+}
+
+// PSC settings for a Cloud SQL instance.
+message PscConfig {
+  // Whether PSC connectivity is enabled for this instance.
+  optional bool psc_enabled = 1;
+
+  // Optional. The list of consumer projects that are allow-listed for PSC
+  // connections to this instance. This instance can be connected to with PSC
+  // from any network in these projects.
+  //
+  // Each consumer project in this list may be represented by a project number
+  // (numeric) or by a project id (alphanumeric).
+  repeated string allowed_consumer_projects = 2
+      [(google.api.field_behavior) = OPTIONAL];
+
+  // Optional. The list of settings for requested Private Service Connect
+  // consumer endpoints that can be used to connect to this Cloud SQL instance.
+  repeated PscAutoConnectionConfig psc_auto_connections = 3
+      [(google.api.field_behavior) = OPTIONAL];
+
+  // Optional. The network attachment of the consumer network that the
+  // Private Service Connect enabled Cloud SQL instance is
+  // authorized to connect via PSC interface.
+  // format: projects/PROJECT/regions/REGION/networkAttachments/ID
+  string network_attachment_uri = 4 [(google.api.field_behavior) = OPTIONAL];
+}
+
+// Settings for an automatically-setup Private Service Connect consumer endpoint
+// that is used to connect to a Cloud SQL instance.
+message PscAutoConnectionConfig {
+  // Optional. This is the project ID of consumer service project of this
+  // consumer endpoint.
+  //
+  // Optional. This is only applicable if consumer_network is a shared vpc
+  // network.
+  string consumer_project = 1 [(google.api.field_behavior) = OPTIONAL];
+
+  // Optional. The consumer network of this consumer endpoint. This must be a
+  // resource path that includes both the host project and the network name.
+  //
+  // For example, `projects/project1/global/networks/network1`.
+  //
+  // The consumer host project of this network might be different from the
+  // consumer service project.
+  string consumer_network = 2 [(google.api.field_behavior) = OPTIONAL];
+
+  // The IP address of the consumer endpoint.
+  optional string ip_address = 3
+      [(google.api.field_info).format = IPV4_OR_IPV6];
+
+  // The connection status of the consumer endpoint.
+  optional string status = 4;
+
+  // The connection policy status of the consumer network.
+  optional string consumer_network_status = 5;
 }
 
 // Preferred location. This specifies where a Cloud SQL instance is located.
@@ -465,37 +967,39 @@ message IpConfiguration {
 // specified.
 message LocationPreference {
   // The App Engine application to follow, it must be in the same region as the
-  // Cloud SQL instance.
+  // Cloud SQL instance. WARNING: Changing this might restart the instance.
   string follow_gae_application = 1 [deprecated = true];
 
   // The preferred Compute Engine zone (for example: us-central1-a,
-  // us-central1-b, etc.).
+  // us-central1-b, etc.). WARNING: Changing this might restart the instance.
   string zone = 2;
 
   // The preferred Compute Engine zone for the secondary/failover
   // (for example: us-central1-a, us-central1-b, etc.).
-  // Reserved for future use.
+  // To disable this field, set it to 'no_secondary_zone'.
   string secondary_zone = 4;
 
-  // This is always **sql#locationPreference**.
+  // This is always `sql#locationPreference`.
   string kind = 3;
 }
 
 // Maintenance window. This specifies when a Cloud SQL instance is
 // restarted for system maintenance purposes.
 message MaintenanceWindow {
-  // hour of day - 0 to 23.
+  // Hour of day - 0 to 23. Specify in the UTC time zone.
   google.protobuf.Int32Value hour = 1;
 
-  // day of week (1-7), starting on Monday.
+  // Day of week - `MONDAY`, `TUESDAY`, `WEDNESDAY`, `THURSDAY`, `FRIDAY`,
+  // `SATURDAY`, or `SUNDAY`. Specify in the UTC time zone.
+  // Returned in output as an integer, 1 to 7, where `1` equals Monday.
   google.protobuf.Int32Value day = 2;
 
-  // Maintenance timing setting: **canary** (Earlier) or **stable** (Later).
-  // [Learn
-  // more](https://cloud.google.com/sql/docs/mysql/instance-settings#maintenance-timing-2ndgen).
+  // Maintenance timing settings: `canary`, `stable`, or `week5`.
+  // For more information, see [About maintenance on Cloud SQL
+  // instances](https://cloud.google.com/sql/docs/mysql/maintenance).
   SqlUpdateTrack update_track = 3;
 
-  // This is always **sql#maintenanceWindow**.
+  // This is always `sql#maintenanceWindow`.
   string kind = 4;
 }
 
@@ -533,7 +1037,7 @@ message InsightsConfig {
   bool record_application_tags = 3;
 
   // Maximum query length stored in bytes. Default value: 1024 bytes.
-  // Range: 256-4500 bytes. Query length more than this field value will be
+  // Range: 256-4500 bytes. Query lengths greater than this field value will be
   // truncated to this value. When unset, query length will be the default
   // value. Changing query length will restart the database.
   google.protobuf.Int32Value query_string_length = 4;
@@ -541,6 +1045,10 @@ message InsightsConfig {
   // Number of query execution plans captured by Insights per minute
   // for all queries combined. Default is 5.
   google.protobuf.Int32Value query_plans_per_minute = 5;
+
+  // Optional. Whether enhanced query insights feature is enabled.
+  google.protobuf.BoolValue enhanced_query_insights_enabled = 8
+      [(google.api.field_behavior) = OPTIONAL];
 }
 
 // Read-replica configuration specific to MySQL databases.
@@ -571,7 +1079,7 @@ message MySqlReplicaConfiguration {
   // PEM representation of the replica's x509 certificate.
   string client_certificate = 7;
 
-  // PEM representation of the replica's private key. The corresponsing public
+  // PEM representation of the replica's private key. The corresponding public
   // key is encoded in the client's certificate.
   string client_key = 8;
 
@@ -582,7 +1090,7 @@ message MySqlReplicaConfiguration {
   // certificate that it sends during the SSL handshake.
   google.protobuf.BoolValue verify_server_certificate = 10;
 
-  // This is always **sql#mysqlReplicaConfiguration**.
+  // This is always `sql#mysqlReplicaConfiguration`.
   string kind = 11;
 }
 
@@ -591,7 +1099,7 @@ message DiskEncryptionConfiguration {
   // Resource name of KMS key for disk encryption
   string kms_key_name = 1;
 
-  // This is always **sql#diskEncryptionConfiguration**.
+  // This is always `sql#diskEncryptionConfiguration`.
   string kind = 2;
 }
 
@@ -600,15 +1108,15 @@ message DiskEncryptionStatus {
   // KMS key version used to encrypt the Cloud SQL instance resource
   string kms_key_version_name = 1;
 
-  // This is always **sql#diskEncryptionStatus**.
+  // This is always `sql#diskEncryptionStatus`.
   string kind = 2;
 }
 
-// Database instance IP Mapping.
+// Database instance IP mapping
 message IpMapping {
-  // The type of this IP address. A **PRIMARY** address is a public address that
-  // can accept incoming connections. A **PRIVATE** address is a private address
-  // that can accept incoming connections. An **OUTGOING** address is the source
+  // The type of this IP address. A `PRIMARY` address is a public address that
+  // can accept incoming connections. A `PRIVATE` address is a private address
+  // that can accept incoming connections. An `OUTGOING` address is the source
   // address of connections originating from the instance, if supported.
   SqlIpAddressType type = 1;
 
@@ -617,9 +1125,43 @@ message IpMapping {
 
   // The due time for this IP to be retired in
   // [RFC 3339](https://tools.ietf.org/html/rfc3339) format, for example
-  // **2012-11-15T16:19:00.094Z**. This field is only available when
+  // `2012-11-15T16:19:00.094Z`. This field is only available when
   // the IP is scheduled to be retired.
   google.protobuf.Timestamp time_to_retire = 3;
+}
+
+// The type of maintenance to be performed on the instance.
+enum SqlMaintenanceType {
+  // Maintenance type is unspecified.
+  SQL_MAINTENANCE_TYPE_UNSPECIFIED = 0;
+
+  // Indicates that a standalone instance is undergoing maintenance. The
+  // instance can be either a primary instance or a replica.
+  INSTANCE_MAINTENANCE = 1;
+
+  // Indicates that the primary instance and all of its replicas, including
+  // cascading replicas, are undergoing maintenance. Maintenance is performed on
+  // groups of replicas first, followed by the primary instance.
+  REPLICA_INCLUDED_MAINTENANCE = 2;
+
+  // Indicates that the standalone instance is undergoing maintenance, initiated
+  // by self-service. The instance can be either a primary instance or a
+  // replica.
+  INSTANCE_SELF_SERVICE_MAINTENANCE = 3;
+
+  // Indicates that the primary instance and all of its replicas are undergoing
+  // maintenance, initiated by self-service. Maintenance is performed on groups
+  // of replicas first, followed by the primary instance.
+  REPLICA_INCLUDED_SELF_SERVICE_MAINTENANCE = 4;
+}
+
+// The sub operation type based on the operation type.
+message SqlSubOperationType {
+  // Sub operation details corresponding to the operation type.
+  oneof sub_operation_details {
+    // The type of maintenance to be performed on the instance.
+    SqlMaintenanceType maintenance_type = 1;
+  }
 }
 
 // An Operation resource.&nbsp;For successful operations that return an
@@ -687,7 +1229,8 @@ message Operation {
     // Deletes a user from a Cloud SQL instance.
     DELETE_USER = 20;
 
-    // Updates an existing user in a Cloud SQL instance.
+    // Updates an existing user in a Cloud SQL instance. If a user with the
+    // specified username doesn't exist, a new user is created.
     UPDATE_USER = 21;
 
     // Creates a database in the Cloud SQL instance.
@@ -733,6 +1276,70 @@ message Operation {
     // Starts external sync of a Cloud SQL EM replica to an external primary
     // instance.
     START_EXTERNAL_SYNC = 35;
+
+    // Recovers logs from an instance's old data disk.
+    LOG_CLEANUP = 36;
+
+    // Performs auto-restart of an HA-enabled Cloud SQL database for auto
+    // recovery.
+    AUTO_RESTART = 37;
+
+    // Re-encrypts CMEK instances with latest key version.
+    REENCRYPT = 38;
+
+    // Switches the roles of the primary and replica pair. The target instance
+    // should be the replica.
+    SWITCHOVER = 39;
+
+    // Update a backup.
+    UPDATE_BACKUP = 40;
+
+    // Acquire a lease for the setup of SQL Server Reporting Services (SSRS).
+    ACQUIRE_SSRS_LEASE = 42;
+
+    // Release a lease for the setup of SQL Server Reporting Services (SSRS).
+    RELEASE_SSRS_LEASE = 43;
+
+    // Reconfigures old primary after a promote replica operation. Effect of a
+    // promote operation to the old primary is executed in this operation,
+    // asynchronously from the promote replica operation executed to the
+    // replica.
+    RECONFIGURE_OLD_PRIMARY = 44;
+
+    // Indicates that the instance, its read replicas, and its cascading
+    // replicas are in maintenance. Maintenance typically gets initiated on
+    // groups of replicas first, followed by the primary instance. For each
+    // instance, maintenance typically causes the instance to be unavailable for
+    // 1-3 minutes.
+    CLUSTER_MAINTENANCE = 45 [deprecated = true];
+
+    // Indicates that the instance (and any of its replicas) are currently in
+    // maintenance. This is initiated as a self-service request by using SSM.
+    // Maintenance typically causes the instance to be unavailable for 1-3
+    // minutes.
+    SELF_SERVICE_MAINTENANCE = 46 [deprecated = true];
+
+    // Switches a primary instance to a replica. This operation runs as part of
+    // a switchover operation to the original primary instance.
+    SWITCHOVER_TO_REPLICA = 47;
+
+    // Updates the major version of a Cloud SQL instance.
+    MAJOR_VERSION_UPGRADE = 48;
+
+    // Deprecated: ADVANCED_BACKUP is deprecated. Use ENHANCED_BACKUP instead.
+    ADVANCED_BACKUP = 49 [deprecated = true];
+
+    // Changes the BackupTier of a Cloud SQL instance.
+    MANAGE_BACKUP = 50;
+
+    // Creates a backup for an Enhanced BackupTier Cloud SQL instance.
+    ENHANCED_BACKUP = 51;
+
+    // Repairs entire read pool or specified read pool nodes in the read pool.
+    REPAIR_READ_POOL = 52;
+
+    // Creates a Cloud SQL read pool instance.
+    CREATE_READ_POOL = 53;
   }
 
   // The status of an operation.
@@ -750,16 +1357,12 @@ message Operation {
     DONE = 3;
   }
 
-  // This is always **sql#operation**.
+  // This is always `sql#operation`.
   string kind = 1;
 
   string target_link = 2;
 
-  // The status of an operation. Valid values are:
-  // *  **PENDING**
-  // *  **RUNNING**
-  // *  **DONE**
-  // *  **SQL_OPERATION_STATUS_UNSPECIFIED**
+  // The status of an operation.
   SqlOperationStatus status = 3;
 
   // The email address of the user who initiated this operation.
@@ -767,36 +1370,39 @@ message Operation {
 
   // The time this operation was enqueued in UTC timezone in [RFC
   // 3339](https://tools.ietf.org/html/rfc3339) format, for example
-  // **2012-11-15T16:19:00.094Z**.
+  // `2012-11-15T16:19:00.094Z`.
   google.protobuf.Timestamp insert_time = 5;
 
   // The time this operation actually started in UTC timezone in [RFC
   // 3339](https://tools.ietf.org/html/rfc3339) format, for example
-  // **2012-11-15T16:19:00.094Z**.
+  // `2012-11-15T16:19:00.094Z`.
   google.protobuf.Timestamp start_time = 6;
 
   // The time this operation finished in UTC timezone in [RFC
   // 3339](https://tools.ietf.org/html/rfc3339) format, for example
-  // **2012-11-15T16:19:00.094Z**.
+  // `2012-11-15T16:19:00.094Z`.
   google.protobuf.Timestamp end_time = 7;
 
   // If errors occurred during processing of this operation, this field will be
   // populated.
   OperationErrors error = 8;
 
+  // An Admin API warning message.
+  ApiWarning api_warning = 19;
+
   // The type of the operation. Valid values are:
-  // *  **CREATE**
-  // *  **DELETE**
-  // *  **UPDATE**
-  // *  **RESTART**
-  // *  **IMPORT**
-  // *  **EXPORT**
-  // *  **BACKUP_VOLUME**
-  // *  **RESTORE_VOLUME**
-  // *  **CREATE_USER**
-  // *  **DELETE_USER**
-  // *  **CREATE_DATABASE**
-  // *  **DELETE_DATABASE**
+  // *  `CREATE`
+  // *  `DELETE`
+  // *  `UPDATE`
+  // *  `RESTART`
+  // *  `IMPORT`
+  // *  `EXPORT`
+  // *  `BACKUP_VOLUME`
+  // *  `RESTORE_VOLUME`
+  // *  `CREATE_USER`
+  // *  `DELETE_USER`
+  // *  `CREATE_DATABASE`
+  // *  `DELETE_DATABASE`
   SqlOperationType operation_type = 9;
 
   // The context for import operation, if applicable.
@@ -808,12 +1414,20 @@ message Operation {
   // The context for backup operation, if applicable.
   BackupContext backup_context = 17;
 
+  // This field is only populated when the operation_type is
+  // PRE_CHECK_MAJOR_VERSION_UPGRADE.
+  // The PreCheckMajorVersionUpgradeContext message itself contains the details
+  // for that pre-check, such as the target database version for the upgrade
+  // and the results of the check (including any warnings or errors found).
+  PreCheckMajorVersionUpgradeContext pre_check_major_version_upgrade_context =
+      50;
+
   // An identifier that uniquely identifies the operation. You can use this
   // identifier to retrieve the Operations resource that has information about
   // the operation.
   string name = 12;
 
-  // Name of the database instance related to this operation.
+  // Name of the resource on which this operation runs.
   string target_id = 13;
 
   // The URI of this resource.
@@ -821,11 +1435,18 @@ message Operation {
 
   // The project ID of the target instance related to this operation.
   string target_project = 15;
+
+  // The context for acquire SSRS lease operation, if applicable.
+  AcquireSsrsLeaseContext acquire_ssrs_lease_context = 20;
+
+  // Optional. The sub operation based on the operation type.
+  SqlSubOperationType sub_operation_type = 48
+      [(google.api.field_behavior) = OPTIONAL];
 }
 
 // Database instance operation error.
 message OperationError {
-  // This is always **sql#operationError**.
+  // This is always `sql#operationError`.
   string kind = 1;
 
   // Identifies the specific error that occurred.
@@ -837,11 +1458,70 @@ message OperationError {
 
 // Database instance operation errors list wrapper.
 message OperationErrors {
-  // This is always **sql#operationErrors**.
+  // This is always `sql#operationErrors`.
   string kind = 1;
 
   // The list of errors encountered while processing this operation.
   repeated OperationError errors = 2;
+}
+
+// Database instance local user password validation policy.
+// This message defines the password policy for local database users.
+// When enabled, it enforces constraints on password complexity, length,
+// and reuse. Keep this policy enabled to help prevent unauthorized access.
+message PasswordValidationPolicy {
+  // The complexity choices of the password.
+  enum Complexity {
+    // Complexity check is not specified.
+    COMPLEXITY_UNSPECIFIED = 0;
+
+    // A combination of lowercase, uppercase, numeric, and non-alphanumeric
+    // characters.
+    COMPLEXITY_DEFAULT = 1;
+  }
+
+  // Minimum number of characters allowed.
+  google.protobuf.Int32Value min_length = 1;
+
+  // The complexity of the password.
+  Complexity complexity = 2;
+
+  // Number of previous passwords that cannot be reused.
+  google.protobuf.Int32Value reuse_interval = 3;
+
+  // Disallow username as a part of the password.
+  google.protobuf.BoolValue disallow_username_substring = 4;
+
+  // Minimum interval after which the password can be changed. This flag is only
+  // supported for PostgreSQL.
+  google.protobuf.Duration password_change_interval = 5;
+
+  // Whether to enable the password policy or not. When enabled, passwords must
+  // meet complexity requirements. Keep this policy enabled to help prevent
+  // unauthorized access. Disabling this policy allows weak passwords.
+  google.protobuf.BoolValue enable_password_policy = 6;
+
+  // This field is deprecated and will be removed in a future version of the
+  // API.
+  google.protobuf.BoolValue disallow_compromised_credentials = 7
+      [deprecated = true];
+}
+
+// Data cache configurations.
+message DataCacheConfig {
+  // Whether data cache is enabled for the instance.
+  bool data_cache_enabled = 1;
+}
+
+// Config used to determine the final backup settings for the instance.
+message FinalBackupConfig {
+  // Whether the final backup is enabled for the instance.
+  optional bool enabled = 1;
+
+  // The number of days to retain the final backup after the instance deletion.
+  // The final backup will be purged at (time_of_instance_deletion +
+  // retention_days).
+  optional int32 retention_days = 3;
 }
 
 // Database instance settings.
@@ -861,6 +1541,46 @@ message Settings {
     ON_DEMAND = 3 [deprecated = true];
   }
 
+  // The edition of the instance.
+  enum Edition {
+    // The instance did not specify the edition.
+    EDITION_UNSPECIFIED = 0;
+
+    // The instance is an enterprise edition.
+    ENTERPRISE = 2;
+
+    // The instance is an Enterprise Plus edition.
+    ENTERPRISE_PLUS = 3;
+  }
+
+  // The options for enforcing Cloud SQL connectors in the instance.
+  enum ConnectorEnforcement {
+    // The requirement for Cloud SQL connectors is unknown.
+    CONNECTOR_ENFORCEMENT_UNSPECIFIED = 0;
+
+    // Do not require Cloud SQL connectors.
+    NOT_REQUIRED = 1;
+
+    // Require all connections to use Cloud SQL connectors, including the
+    // Cloud SQL Auth Proxy and Cloud SQL Java, Python, and Go connectors.
+    // Note: This disables all existing authorized networks.
+    REQUIRED = 2;
+  }
+
+  // ExecuteSql API's access to the instance.
+  enum DataApiAccess {
+    // Unspecified, effectively the same as `DISALLOW_DATA_API`.
+    DATA_API_ACCESS_UNSPECIFIED = 0;
+
+    // Disallow using ExecuteSql API to connect to the instance.
+    DISALLOW_DATA_API = 1;
+
+    // Allow using ExecuteSql API to connect to the instance. For private IP
+    // instances, this allows authorized users to access the instance from
+    // the public internet using ExecuteSql API.
+    ALLOW_DATA_API = 2;
+  }
+
   // The version of instance settings. This is a required field for update
   // method to make sure concurrent updates are handled properly. During update,
   // use the most recent settingsVersion value for this instance and do not try
@@ -872,10 +1592,10 @@ message Settings {
   repeated string authorized_gae_applications = 2 [deprecated = true];
 
   // The tier (or machine type) for this instance, for example
-  // **db-custom-1-3840**.
+  // `db-custom-1-3840`. WARNING: Changing this restarts the instance.
   string tier = 3;
 
-  // This is always **sql#settings**.
+  // This is always `sql#settings`.
   string kind = 4;
 
   // User-provided labels, represented as a dictionary where each label is a
@@ -883,21 +1603,21 @@ message Settings {
   map<string, string> user_labels = 5;
 
   // Availability type. Potential values:
-  // *  **ZONAL**: The instance serves data from only one zone. Outages in that
+  // *  `ZONAL`: The instance serves data from only one zone. Outages in that
   // zone affect data accessibility.
-  // *  **REGIONAL**: The instance can serve data from more than one zone in a
+  // *  `REGIONAL`: The instance can serve data from more than one zone in a
   // region (it is highly available)./
   //
   // For more information, see [Overview of the High Availability
   // Configuration](https://cloud.google.com/sql/docs/mysql/high-availability).
   SqlAvailabilityType availability_type = 6;
 
-  // The pricing plan for this instance. This can be either **PER_USE** or
-  // **PACKAGE**. Only **PER_USE** is supported for Second Generation instances.
+  // The pricing plan for this instance. This can be either `PER_USE` or
+  // `PACKAGE`. Only `PER_USE` is supported for Second Generation instances.
   SqlPricingPlan pricing_plan = 7;
 
   // The type of replication this instance uses. This can be either
-  // **ASYNCHRONOUS** or **SYNCHRONOUS**. (Deprecated) This property was only
+  // `ASYNCHRONOUS` or `SYNCHRONOUS`. (Deprecated) This property was only
   // applicable to First Generation instances.
   SqlReplicationType replication_type = 8 [deprecated = true];
 
@@ -907,9 +1627,9 @@ message Settings {
 
   // The activation policy specifies when the instance is activated; it is
   // applicable only when the instance state is RUNNABLE. Valid values:
-  // *  **ALWAYS**: The instance is on, and remains so even in the absence of
+  // *  `ALWAYS`: The instance is on, and remains so even in the absence of
   // connection requests.
-  // *  **NEVER**: The instance is off; it is not activated, even if a
+  // *  `NEVER`: The instance is off; it is not activated, even if a
   // connection request arrives.
   SqlActivationPolicy activation_policy = 10;
 
@@ -931,7 +1651,7 @@ message Settings {
   // The database flags passed to the instance at startup.
   repeated DatabaseFlags database_flags = 14;
 
-  // The type of data disk: **PD_SSD** (default) or **PD_HDD**. Not used for
+  // The type of data disk: `PD_SSD` (default) or `PD_HDD`. Not used for
   // First Generation instances.
   SqlDataDiskType data_disk_type = 15;
 
@@ -943,13 +1663,15 @@ message Settings {
   BackupConfiguration backup_configuration = 17;
 
   // Configuration specific to read replica instances. Indicates whether
-  // replication is enabled or not.
+  // replication is enabled or not. WARNING: Changing this restarts the
+  // instance.
   google.protobuf.BoolValue database_replication_enabled = 18;
 
   // Configuration specific to read replica instances. Indicates whether
   // database flags for crash-safe replication are enabled. This property was
   // only applicable to First Generation instances.
-  google.protobuf.BoolValue crash_safe_replication_enabled = 19 [deprecated = true];
+  google.protobuf.BoolValue crash_safe_replication_enabled = 19
+      [deprecated = true];
 
   // The size of data disk, in GB. The data disk size minimum is 10GB.
   google.protobuf.Int64Value data_disk_size_gb = 20;
@@ -966,13 +1688,205 @@ message Settings {
   // Insights configuration, for now relevant only for Postgres.
   InsightsConfig insights_config = 25;
 
+  // The local user password validation policy of the instance.
+  PasswordValidationPolicy password_validation_policy = 27;
+
   // SQL Server specific audit configuration.
   SqlServerAuditConfig sql_server_audit_config = 29;
+
+  // Optional. The edition of the instance.
+  Edition edition = 38 [(google.api.field_behavior) = OPTIONAL];
+
+  // Specifies if connections must use Cloud SQL connectors.
+  // Option values include the following: `NOT_REQUIRED` (Cloud SQL instances
+  // can be connected without Cloud SQL
+  // Connectors) and `REQUIRED` (Only allow connections that use Cloud SQL
+  // Connectors).
+  //
+  // Note that using REQUIRED disables all existing authorized networks. If
+  // this field is not specified when creating a new instance, NOT_REQUIRED is
+  // used. If this field is not specified when patching or updating an existing
+  // instance, it is left unchanged in the instance.
+  ConnectorEnforcement connector_enforcement = 32;
+
+  // Configuration to protect against accidental instance deletion.
+  google.protobuf.BoolValue deletion_protection_enabled = 33;
+
+  // Server timezone, relevant only for Cloud SQL for SQL Server.
+  string time_zone = 34;
+
+  // Specifies advanced machine configuration for the instances relevant only
+  // for SQL Server.
+  AdvancedMachineFeatures advanced_machine_features = 35;
+
+  // Configuration for data cache.
+  DataCacheConfig data_cache_config = 37;
+
+  // Optional. Configuration value for recreation of replica after certain
+  // replication lag
+  google.protobuf.Int32Value replication_lag_max_seconds = 39
+      [(google.api.field_behavior) = OPTIONAL];
+
+  // Optional. When this parameter is set to true, Cloud SQL instances can
+  // connect to Vertex AI to pass requests for real-time predictions and
+  // insights to the AI. The default value is false. This applies only to Cloud
+  // SQL for MySQL and Cloud SQL for PostgreSQL instances.
+  google.protobuf.BoolValue enable_google_ml_integration = 40
+      [(google.api.field_behavior) = OPTIONAL];
+
+  // Optional. By default, Cloud SQL instances have schema extraction disabled
+  // for Dataplex. When this parameter is set to true, schema extraction for
+  // Dataplex on Cloud SQL instances is activated.
+  google.protobuf.BoolValue enable_dataplex_integration = 41
+      [(google.api.field_behavior) = OPTIONAL];
+
+  // Optional. When this parameter is set to true, Cloud SQL retains backups of
+  // the instance even after the instance is deleted. The ON_DEMAND backup will
+  // be retained until customer deletes the backup or the project. The AUTOMATED
+  // backup will be retained based on the backups retention setting.
+  google.protobuf.BoolValue retain_backups_on_delete = 42
+      [(google.api.field_behavior) = OPTIONAL];
+
+  // Optional. Provisioned number of I/O operations per second for the data
+  // disk. This field is only used for hyperdisk-balanced disk types.
+  optional int64 data_disk_provisioned_iops = 43
+      [(google.api.field_behavior) = OPTIONAL];
+
+  // Optional. Provisioned throughput measured in MiB per second for the data
+  // disk. This field is only used for hyperdisk-balanced disk types.
+  optional int64 data_disk_provisioned_throughput = 44
+      [(google.api.field_behavior) = OPTIONAL];
+
+  // Optional. The managed connection pooling configuration for the instance.
+  optional ConnectionPoolConfig connection_pool_config = 45
+      [(google.api.field_behavior) = OPTIONAL];
+
+  // Optional. The final backup configuration for the instance.
+  optional FinalBackupConfig final_backup_config = 47
+      [(google.api.field_behavior) = OPTIONAL];
+
+  // Optional. The read pool auto-scale configuration for the instance.
+  optional ReadPoolAutoScaleConfig read_pool_auto_scale_config = 48
+      [(google.api.field_behavior) = OPTIONAL];
+
+  // Optional. Cloud SQL for MySQL auto-upgrade configuration. When this
+  // parameter is set to true, auto-upgrade is enabled for MySQL 8.0 minor
+  // versions. The MySQL version must be 8.0.35 or higher.
+  optional bool auto_upgrade_enabled = 50
+      [(google.api.field_behavior) = OPTIONAL];
+
+  // Optional. The Microsoft Entra ID configuration for the SQL Server instance.
+  SqlServerEntraIdConfig entraid_config = 52
+      [(google.api.field_behavior) = OPTIONAL];
+
+  // This parameter controls whether to allow using ExecuteSql API to connect to
+  // the instance. Not allowed by default.
+  optional DataApiAccess data_api_access = 53;
+
+  // Optional. Configuration for Performance Capture, provides diagnostic
+  // metrics during high load situations.
+  PerformanceCaptureConfig performance_capture_config = 54
+      [(google.api.field_behavior) = OPTIONAL];
+}
+
+// Performance Capture configuration.
+message PerformanceCaptureConfig {
+  // Optional. Enable or disable the Performance Capture feature.
+  optional bool enabled = 1 [(google.api.field_behavior) = OPTIONAL];
+
+  // Optional. The time interval in seconds between any two probes.
+  optional int32 probing_interval_seconds = 2
+      [(google.api.field_behavior) = OPTIONAL];
+
+  // Optional. The minimum number of consecutive readings above threshold that
+  // triggers instance state capture.
+  optional int32 probe_threshold = 3 [(google.api.field_behavior) = OPTIONAL];
+
+  // Optional. The minimum number of server threads running to trigger the
+  // capture on primary.
+  optional int32 running_threads_threshold = 4
+      [(google.api.field_behavior) = OPTIONAL];
+
+  // Optional. The minimum number of seconds replica must be lagging behind
+  // primary to trigger capture on replica.
+  optional int32 seconds_behind_source_threshold = 5
+      [(google.api.field_behavior) = OPTIONAL];
+
+  // Optional. The amount of time in seconds that a transaction needs to have
+  // been open before the watcher starts recording it.
+  optional int32 transaction_duration_threshold = 8
+      [(google.api.field_behavior) = OPTIONAL];
+}
+
+// Connection pool flags for Cloud SQL instances managed connection pool
+// configuration.
+message ConnectionPoolFlags {
+  // Required. The name of the flag.
+  string name = 1 [(google.api.field_behavior) = REQUIRED];
+
+  // Required. The value of the flag. Boolean flags are set to `on` for true
+  // and `off` for false. This field must be omitted if the flag
+  // doesn't take a value.
+  string value = 2 [(google.api.field_behavior) = REQUIRED];
+}
+
+// The managed connection pooling configuration.
+message ConnectionPoolConfig {
+  // Whether managed connection pooling is enabled.
+  optional bool connection_pooling_enabled = 1;
+
+  // Optional. List of connection pool configuration flags.
+  repeated ConnectionPoolFlags flags = 8
+      [(google.api.field_behavior) = OPTIONAL];
+
+  // Output only. Number of connection poolers.
+  optional int32 pooler_count = 9 [(google.api.field_behavior) = OUTPUT_ONLY];
+}
+
+// The read pool auto-scale configuration.
+message ReadPoolAutoScaleConfig {
+  // Target metric for read pool auto scaling.
+  message TargetMetric {
+    // The metric name to be used for auto scaling.
+    optional string metric = 1;
+
+    // The target value for the metric.
+    optional float target_value = 2;
+  }
+
+  // Indicates whether read pool auto scaling is enabled.
+  optional bool enabled = 1;
+
+  // Minimum number of read pool nodes to be maintained.
+  optional int32 min_node_count = 2;
+
+  // Maximum number of read pool nodes to be maintained.
+  optional int32 max_node_count = 3;
+
+  // Optional. Target metrics for read pool auto scaling.
+  repeated TargetMetric target_metrics = 4
+      [(google.api.field_behavior) = OPTIONAL];
+
+  // Indicates whether read pool auto scaling supports scale in operations
+  // (removing nodes).
+  optional bool disable_scale_in = 5;
+
+  // The cooldown period for scale-in operations.
+  optional int32 scale_in_cooldown_seconds = 6;
+
+  // The cooldown period for scale-out operations.
+  optional int32 scale_out_cooldown_seconds = 7;
+}
+
+// Specifies options for controlling advanced machine features.
+message AdvancedMachineFeatures {
+  // The number of threads per physical core.
+  int32 threads_per_core = 1;
 }
 
 // SslCerts Resource
 message SslCert {
-  // This is always **sql#sslCert**.
+  // This is always `sql#sslCert`.
   string kind = 1;
 
   // Serial number, as extracted from the certificate.
@@ -983,7 +1897,7 @@ message SslCert {
 
   // The time when the certificate was created in [RFC
   // 3339](https://tools.ietf.org/html/rfc3339) format, for example
-  // **2012-11-15T16:19:00.094Z**
+  // `2012-11-15T16:19:00.094Z`
   google.protobuf.Timestamp create_time = 4;
 
   // User supplied name.  Constrained to [a-zA-Z.-_ ]+.
@@ -991,7 +1905,7 @@ message SslCert {
 
   // The time when the certificate expires in [RFC
   // 3339](https://tools.ietf.org/html/rfc3339) format, for example
-  // **2012-11-15T16:19:00.094Z**.
+  // `2012-11-15T16:19:00.094Z`.
   google.protobuf.Timestamp expiration_time = 6;
 
   // Sha1 Fingerprint.
@@ -1016,11 +1930,46 @@ message SslCertDetail {
 
 // Active Directory configuration, relevant only for Cloud SQL for SQL Server.
 message SqlActiveDirectoryConfig {
+  // The modes of Active Directory configuration.
+  enum ActiveDirectoryMode {
+    // Unspecified mode. Will default to MANAGED_ACTIVE_DIRECTORY if the mode is
+    // not specified to maintain backward compatibility.
+    ACTIVE_DIRECTORY_MODE_UNSPECIFIED = 0;
+
+    // Managed Active Directory mode.
+    MANAGED_ACTIVE_DIRECTORY = 1;
+
+    // Deprecated: Use CUSTOMER_MANAGED_ACTIVE_DIRECTORY instead.
+    SELF_MANAGED_ACTIVE_DIRECTORY = 2 [deprecated = true];
+
+    // Customer-managed Active Directory mode.
+    CUSTOMER_MANAGED_ACTIVE_DIRECTORY = 3;
+  }
+
   // This is always sql#activeDirectoryConfig.
   string kind = 1;
 
   // The name of the domain (e.g., mydomain.com).
   string domain = 2;
+
+  // Optional. The mode of the Active Directory configuration.
+  ActiveDirectoryMode mode = 3 [(google.api.field_behavior) = OPTIONAL];
+
+  // Optional. Domain controller IPv4 addresses used to bootstrap Active
+  // Directory.
+  repeated string dns_servers = 4 [
+    (google.api.field_info).format = IPV4,
+    (google.api.field_behavior) = OPTIONAL
+  ];
+
+  // Optional. The secret manager key storing the administrator credential.
+  // (e.g., projects/{project}/secrets/{secret}).
+  string admin_credential_secret_name = 5
+      [(google.api.field_behavior) = OPTIONAL];
+
+  // Optional. The organizational unit distinguished name. This is the full
+  // hierarchical path to the organizational unit.
+  string organizational_unit = 6 [(google.api.field_behavior) = OPTIONAL];
 }
 
 // SQL Server specific audit configuration.
@@ -1030,6 +1979,24 @@ message SqlServerAuditConfig {
 
   // The name of the destination bucket (e.g., gs://mybucket).
   string bucket = 2;
+
+  // How long to keep generated audit files.
+  google.protobuf.Duration retention_interval = 3;
+
+  // How often to upload generated audit files.
+  google.protobuf.Duration upload_interval = 4;
+}
+
+// SQL Server Entra ID configuration.
+message SqlServerEntraIdConfig {
+  // Output only. This is always sql#sqlServerEntraIdConfig
+  string kind = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
+
+  // Optional. The tenant ID for the Entra ID configuration.
+  string tenant_id = 2 [(google.api.field_behavior) = OPTIONAL];
+
+  // Optional. The application ID for the Entra ID configuration.
+  string application_id = 3 [(google.api.field_behavior) = OPTIONAL];
 }
 
 enum SqlBackendType {
@@ -1086,11 +2053,77 @@ enum SqlDatabaseVersion {
   // The database version is MySQL 5.7.
   MYSQL_5_7 = 6;
 
-  // The database version is PostgreSQL 9.6.
-  POSTGRES_9_6 = 9;
+  // The database version is MySQL 8.
+  MYSQL_8_0 = 20;
 
-  // The database version is PostgreSQL 11.
-  POSTGRES_11 = 10;
+  // The database major version is MySQL 8.0 and the minor version is 18.
+  MYSQL_8_0_18 = 41;
+
+  // The database major version is MySQL 8.0 and the minor version is 26.
+  MYSQL_8_0_26 = 85;
+
+  // The database major version is MySQL 8.0 and the minor version is 27.
+  MYSQL_8_0_27 = 111;
+
+  // The database major version is MySQL 8.0 and the minor version is 28.
+  MYSQL_8_0_28 = 132;
+
+  // The database major version is MySQL 8.0 and the minor version is 29.
+  MYSQL_8_0_29 = 148 [deprecated = true];
+
+  // The database major version is MySQL 8.0 and the minor version is 30.
+  MYSQL_8_0_30 = 174;
+
+  // The database major version is MySQL 8.0 and the minor version is 31.
+  MYSQL_8_0_31 = 197;
+
+  // The database major version is MySQL 8.0 and the minor version is 32.
+  MYSQL_8_0_32 = 213;
+
+  // The database major version is MySQL 8.0 and the minor version is 33.
+  MYSQL_8_0_33 = 238;
+
+  // The database major version is MySQL 8.0 and the minor version is 34.
+  MYSQL_8_0_34 = 239;
+
+  // The database major version is MySQL 8.0 and the minor version is 35.
+  MYSQL_8_0_35 = 240;
+
+  // The database major version is MySQL 8.0 and the minor version is 36.
+  MYSQL_8_0_36 = 241;
+
+  // The database major version is MySQL 8.0 and the minor version is 37.
+  MYSQL_8_0_37 = 355;
+
+  // The database major version is MySQL 8.0 and the minor version is 39.
+  MYSQL_8_0_39 = 357;
+
+  // The database major version is MySQL 8.0 and the minor version is 40.
+  MYSQL_8_0_40 = 358;
+
+  // The database major version is MySQL 8.0 and the minor version is 41.
+  MYSQL_8_0_41 = 488;
+
+  // The database major version is MySQL 8.0 and the minor version is 42.
+  MYSQL_8_0_42 = 489;
+
+  // The database major version is MySQL 8.0 and the minor version is 43.
+  MYSQL_8_0_43 = 553;
+
+  // The database major version is MySQL 8.0 and the minor version is 44.
+  MYSQL_8_0_44 = 554;
+
+  // The database major version is MySQL 8.0 and the minor version is 45.
+  MYSQL_8_0_45 = 555;
+
+  // The database major version is MySQL 8.0 and the minor version is 46.
+  MYSQL_8_0_46 = 556;
+
+  // The database version is MySQL 8.4.
+  MYSQL_8_4 = 398;
+
+  // The database version is MySQL 9.7.
+  MYSQL_9_7 = 654;
 
   // The database version is SQL Server 2017 Standard.
   SQLSERVER_2017_STANDARD = 11;
@@ -1104,14 +2137,35 @@ enum SqlDatabaseVersion {
   // The database version is SQL Server 2017 Web.
   SQLSERVER_2017_WEB = 16;
 
+  // The database version is PostgreSQL 9.6.
+  POSTGRES_9_6 = 9;
+
   // The database version is PostgreSQL 10.
   POSTGRES_10 = 18;
+
+  // The database version is PostgreSQL 11.
+  POSTGRES_11 = 10;
 
   // The database version is PostgreSQL 12.
   POSTGRES_12 = 19;
 
   // The database version is PostgreSQL 13.
   POSTGRES_13 = 23;
+
+  // The database version is PostgreSQL 14.
+  POSTGRES_14 = 110;
+
+  // The database version is PostgreSQL 15.
+  POSTGRES_15 = 172;
+
+  // The database version is PostgreSQL 16.
+  POSTGRES_16 = 272;
+
+  // The database version is PostgreSQL 17.
+  POSTGRES_17 = 408;
+
+  // The database version is PostgreSQL 18.
+  POSTGRES_18 = 557;
 
   // The database version is SQL Server 2019 Standard.
   SQLSERVER_2019_STANDARD = 26;
@@ -1124,6 +2178,18 @@ enum SqlDatabaseVersion {
 
   // The database version is SQL Server 2019 Web.
   SQLSERVER_2019_WEB = 29;
+
+  // The database version is SQL Server 2022 Standard.
+  SQLSERVER_2022_STANDARD = 199;
+
+  // The database version is SQL Server 2022 Enterprise.
+  SQLSERVER_2022_ENTERPRISE = 200;
+
+  // The database version is SQL Server 2022 Express.
+  SQLSERVER_2022_EXPRESS = 201;
+
+  // The database version is SQL Server 2022 Web.
+  SQLSERVER_2022_WEB = 202;
 }
 
 // The pricing plan for this instance.
@@ -1167,6 +2233,9 @@ enum SqlDataDiskType {
   // This field is deprecated and will be removed from a future version of the
   // API.
   OBSOLETE_LOCAL_SSD = 3 [deprecated = true];
+
+  // A Hyperdisk Balanced data disk.
+  HYPERDISK_BALANCED = 4;
 }
 
 // The availability type of the given Cloud SQL instance.
@@ -1185,13 +2254,96 @@ enum SqlUpdateTrack {
   // This is an unknown maintenance timing preference.
   SQL_UPDATE_TRACK_UNSPECIFIED = 0;
 
-  // For instance update that requires a restart, this update track indicates
-  // your instance prefer to restart for new version early in maintenance
-  // window.
+  // For an instance with a scheduled maintenance window, this maintenance
+  // timing indicates that the maintenance update is scheduled 7 to 14 days
+  // after the notification is sent out. Also referred to as `Week 1` (Console)
+  // and `preview` (gcloud CLI).
   canary = 1;
 
-  // For instance update that requires a restart, this update track indicates
-  // your instance prefer to let Cloud SQL choose the timing of restart (within
-  // its Maintenance window, if applicable).
+  // For an instance with a scheduled maintenance window, this maintenance
+  // timing indicates that the maintenance update is scheduled 15 to 21 days
+  // after the notification is sent out. Also referred to as `Week 2` (Console)
+  // and `production` (gcloud CLI).
   stable = 2;
+
+  // For instance with a scheduled maintenance window, this maintenance
+  // timing indicates that the maintenance update is scheduled 35 to 42 days
+  // after the notification is sent out.
+  week5 = 3;
+}
+
+// Acquire SSRS lease context.
+message AcquireSsrsLeaseContext {
+  // The username to be used as the setup login to connect to the database
+  // server for SSRS setup.
+  optional string setup_login = 1;
+
+  // The username to be used as the service login to connect to the report
+  // database for SSRS setup.
+  optional string service_login = 2;
+
+  // The report database to be used for SSRS setup.
+  optional string report_database = 3;
+
+  // Lease duration needed for SSRS setup.
+  optional google.protobuf.Duration duration = 4;
+}
+
+// DNS metadata.
+message DnsNameMapping {
+  // The connection type of the DNS name.
+  // This enum is not frozen, and new values may be added in the future.
+  enum ConnectionType {
+    // Unknown connection type.
+    CONNECTION_TYPE_UNSPECIFIED = 0;
+
+    // Public IP.
+    PUBLIC = 1;
+
+    // Private services access (private IP).
+    PRIVATE_SERVICES_ACCESS = 2;
+
+    // Private Service Connect.
+    PRIVATE_SERVICE_CONNECT = 3;
+  }
+
+  // The scope that the DNS name applies to.
+  enum DnsScope {
+    // DNS scope not set. This value should not be used.
+    DNS_SCOPE_UNSPECIFIED = 0;
+
+    // Indicates an instance-level DNS name.
+    INSTANCE = 1;
+
+    // Indicates a cluster-level DNS name.
+    CLUSTER = 2;
+  }
+
+  // The system responsible for managing the DNS record.
+  enum RecordManager {
+    // Record manager not set. This value should not be used.
+    RECORD_MANAGER_UNSPECIFIED = 0;
+
+    // The record may be managed by the customer. It is not automatically
+    // managed by Cloud SQL automation.
+    CUSTOMER = 1;
+
+    // The record is managed by Cloud SQL, which will create, update,
+    // and delete the DNS records for the zone automatically when
+    // the Cloud SQL database instance is created or updated.
+    CLOUD_SQL_AUTOMATION = 2;
+  }
+
+  // Output only. The DNS name.
+  string name = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
+
+  // Output only. The connection type of the DNS name.
+  ConnectionType connection_type = 2
+      [(google.api.field_behavior) = OUTPUT_ONLY];
+
+  // Output only. The scope that the DNS name applies to.
+  DnsScope dns_scope = 3 [(google.api.field_behavior) = OUTPUT_ONLY];
+
+  // Output only. The manager for this DNS record.
+  RecordManager record_manager = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
 }

@@ -1,4 +1,4 @@
-// Copyright 2022 Google LLC
+// Copyright 2026 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,31 +22,34 @@ import "google/api/field_behavior.proto";
 import "google/api/resource.proto";
 import "google/protobuf/timestamp.proto";
 
-option cc_enable_arenas = true;
 option csharp_namespace = "Google.Cloud.Dialogflow.Cx.V3Beta1";
-option go_package = "google.golang.org/genproto/googleapis/cloud/dialogflow/cx/v3beta1;cx";
+option go_package = "cloud.google.com/go/dialogflow/cx/apiv3beta1/cxpb;cxpb";
 option java_multiple_files = true;
 option java_outer_classname = "DeploymentProto";
 option java_package = "com.google.cloud.dialogflow.cx.v3beta1";
 option objc_class_prefix = "DF";
 option ruby_package = "Google::Cloud::Dialogflow::CX::V3beta1";
 
-// Service for managing [Deployments][google.cloud.dialogflow.cx.v3beta1.Deployment].
+// Service for managing
+// [Deployments][google.cloud.dialogflow.cx.v3beta1.Deployment].
 service Deployments {
   option (google.api.default_host) = "dialogflow.googleapis.com";
   option (google.api.oauth_scopes) =
       "https://www.googleapis.com/auth/cloud-platform,"
       "https://www.googleapis.com/auth/dialogflow";
 
-  // Returns the list of all deployments in the specified [Environment][google.cloud.dialogflow.cx.v3beta1.Environment].
-  rpc ListDeployments(ListDeploymentsRequest) returns (ListDeploymentsResponse) {
+  // Returns the list of all deployments in the specified
+  // [Environment][google.cloud.dialogflow.cx.v3beta1.Environment].
+  rpc ListDeployments(ListDeploymentsRequest)
+      returns (ListDeploymentsResponse) {
     option (google.api.http) = {
       get: "/v3beta1/{parent=projects/*/locations/*/agents/*/environments/*}/deployments"
     };
     option (google.api.method_signature) = "parent";
   }
 
-  // Retrieves the specified [Deployment][google.cloud.dialogflow.cx.v3beta1.Deployment].
+  // Retrieves the specified
+  // [Deployment][google.cloud.dialogflow.cx.v3beta1.Deployment].
   rpc GetDeployment(GetDeploymentRequest) returns (Deployment) {
     option (google.api.http) = {
       get: "/v3beta1/{name=projects/*/locations/*/agents/*/environments/*/deployments/*}"
@@ -55,7 +58,7 @@ service Deployments {
   }
 }
 
-// Represents an deployment in an environment. A deployment happens when a flow
+// Represents a deployment in an environment. A deployment happens when a flow
 // version configured to be active in the environment. You can configure running
 // pre-deployment steps, e.g. running validation test cases, experiment
 // auto-rollout, etc.
@@ -83,31 +86,32 @@ message Deployment {
   // Result of the deployment.
   message Result {
     // Results of test cases running before the deployment.
-    // Format: `projects/<Project ID>/locations/<Location ID>/agents/<Agent
-    // ID>/testCases/<TestCase ID>/results/<TestCaseResult ID>`.
-    repeated string deployment_test_results = 1 [(google.api.resource_reference) = {
-                                                   type: "dialogflow.googleapis.com/TestCaseResult"
-                                                 }];
+    // Format:
+    // `projects/<ProjectID>/locations/<LocationID>/agents/<AgentID>/testCases/<TestCaseID>/results/<TestCaseResultID>`.
+    repeated string deployment_test_results = 1
+        [(google.api.resource_reference) = {
+          type: "dialogflow.googleapis.com/TestCaseResult"
+        }];
 
     // The name of the experiment triggered by this deployment.
-    // Format: projects/<Project ID>/locations/<Location ID>/agents/<Agent
-    // ID>/environments/<Environment ID>/experiments/<Experiment ID>.
+    // Format:
+    // projects/<ProjectID>/locations/<LocationID>/agents/<AgentID>/environments/<EnvironmentID>/experiments/<ExperimentID>.
     string experiment = 2 [(google.api.resource_reference) = {
-                             type: "dialogflow.googleapis.com/Experiment"
-                           }];
+      type: "dialogflow.googleapis.com/Experiment"
+    }];
   }
 
   // The name of the deployment.
-  // Format: projects/<Project ID>/locations/<Location ID>/agents/<Agent
-  // ID>/environments/<Environment ID>/deployments/<Deployment ID>.
+  // Format:
+  // projects/<ProjectID>/locations/<LocationID>/agents/<AgentID>/environments/<EnvironmentID>/deployments/<DeploymentID>.
   string name = 1;
 
   // The name of the flow version for this deployment.
-  // Format: projects/<Project ID>/locations/<Location ID>/agents/<Agent
-  // ID>/flows/<Flow ID>/versions/<Verion ID>.
+  // Format:
+  // projects/<ProjectID>/locations/<LocationID>/agents/<AgentID>/flows/<FlowID>/versions/<VerionID>.
   string flow_version = 2 [(google.api.resource_reference) = {
-                             type: "dialogflow.googleapis.com/Version"
-                           }];
+    type: "dialogflow.googleapis.com/Version"
+  }];
 
   // The current state of the deployment.
   State state = 3;
@@ -122,11 +126,12 @@ message Deployment {
   google.protobuf.Timestamp end_time = 6;
 }
 
-// The request message for [Deployments.ListDeployments][google.cloud.dialogflow.cx.v3beta1.Deployments.ListDeployments].
+// The request message for
+// [Deployments.ListDeployments][google.cloud.dialogflow.cx.v3beta1.Deployments.ListDeployments].
 message ListDeploymentsRequest {
-  // Required. The [Environment][google.cloud.dialogflow.cx.v3beta1.Environment] to list all environments for.
-  // Format: `projects/<Project ID>/locations/<Location ID>/agents/<Agent
-  // ID>/environments/<Environment ID>`.
+  // Required. The [Environment][google.cloud.dialogflow.cx.v3beta1.Environment]
+  // to list all environments for. Format:
+  // `projects/<ProjectID>/locations/<LocationID>/agents/<AgentID>/environments/<EnvironmentID>`.
   string parent = 1 [
     (google.api.field_behavior) = REQUIRED,
     (google.api.resource_reference) = {
@@ -142,7 +147,8 @@ message ListDeploymentsRequest {
   string page_token = 3;
 }
 
-// The response message for [Deployments.ListDeployments][google.cloud.dialogflow.cx.v3beta1.Deployments.ListDeployments].
+// The response message for
+// [Deployments.ListDeployments][google.cloud.dialogflow.cx.v3beta1.Deployments.ListDeployments].
 message ListDeploymentsResponse {
   // The list of deployments. There will be a maximum number of items
   // returned based on the page_size field in the request. The list may in some
@@ -155,11 +161,12 @@ message ListDeploymentsResponse {
   string next_page_token = 2;
 }
 
-// The request message for [Deployments.GetDeployment][google.cloud.dialogflow.cx.v3beta1.Deployments.GetDeployment].
+// The request message for
+// [Deployments.GetDeployment][google.cloud.dialogflow.cx.v3beta1.Deployments.GetDeployment].
 message GetDeploymentRequest {
-  // Required. The name of the [Deployment][google.cloud.dialogflow.cx.v3beta1.Deployment].
-  // Format: `projects/<Project ID>/locations/<Location ID>/agents/<Agent
-  // ID>/environments/<Environment ID>/deployments/<Deployment ID>`.
+  // Required. The name of the
+  // [Deployment][google.cloud.dialogflow.cx.v3beta1.Deployment]. Format:
+  // `projects/<ProjectID>/locations/<LocationID>/agents/<AgentID>/environments/<EnvironmentID>/deployments/<DeploymentID>`.
   string name = 1 [
     (google.api.field_behavior) = REQUIRED,
     (google.api.resource_reference) = {

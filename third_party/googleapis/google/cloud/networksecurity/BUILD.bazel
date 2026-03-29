@@ -11,6 +11,7 @@ load(
     "@com_google_googleapis_imports//:imports.bzl",
     "ruby_cloud_gapic_library",
     "ruby_gapic_assembly_pkg",
+    "nodejs_gapic_combined_pkg"
 )
 
 # Generates a Ruby wrapper client for networksecurity.
@@ -21,13 +22,14 @@ ruby_cloud_gapic_library(
     srcs = ["//google/cloud/networksecurity/v1beta1:networksecurity_proto_with_info"],
     extra_protoc_parameters = [
         "ruby-cloud-gem-name=google-cloud-network_security",
-        "ruby-cloud-wrapper-of=v1beta1:0.0",
+        "ruby-cloud-wrapper-of=v1beta1:0.7",
         "ruby-cloud-product-url=https://cloud.google.com/traffic-director/docs/reference/network-security/rest/",
         "ruby-cloud-api-id=networksecurity.googleapis.com",
         "ruby-cloud-api-shortname=networksecurity",
     ],
     ruby_cloud_description = "The client library for the Google Network Security V1beta1 API.",
     ruby_cloud_title = "Network Security",
+    transport = "grpc+rest",
 )
 
 # Open Source package.
@@ -35,5 +37,17 @@ ruby_gapic_assembly_pkg(
     name = "google-cloud-networksecurity-ruby",
     deps = [
         ":networksecurity_ruby_wrapper",
+    ],
+)
+
+nodejs_gapic_combined_pkg(
+    name = "google-cloud-networksecurity-nodejs",
+    default_version = "v1beta1",
+    release_level = "stable",
+    templates_excludes = ["package.json", ".OwlBot.yaml"],
+    deps = [
+        "//google/cloud/networksecurity/v1:networksecurity-v1-nodejs",
+        "//google/cloud/networksecurity/v1alpha1:networksecurity-v1alpha1-nodejs",
+        "//google/cloud/networksecurity/v1beta1:networksecurity-v1beta1-nodejs"
     ],
 )

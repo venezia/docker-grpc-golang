@@ -1,4 +1,4 @@
-// Copyright 2021 Google LLC
+// Copyright 2026 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,10 +16,13 @@ syntax = "proto3";
 
 package google.spanner.v1;
 
+import "google/api/field_behavior.proto";
 import "google/protobuf/timestamp.proto";
+import "google/spanner/v1/location.proto";
+import "google/spanner/v1/transaction.proto";
 
 option csharp_namespace = "Google.Cloud.Spanner.V1";
-option go_package = "google.golang.org/genproto/googleapis/spanner/v1;spanner";
+option go_package = "cloud.google.com/go/spanner/apiv1/spannerpb;spannerpb";
 option java_multiple_files = true;
 option java_outer_classname = "CommitResponseProto";
 option java_package = "com.google.spanner.v1";
@@ -43,8 +46,29 @@ message CommitResponse {
   // The Cloud Spanner timestamp at which the transaction committed.
   google.protobuf.Timestamp commit_timestamp = 1;
 
-  // The statistics about this Commit. Not returned by default.
+  // The statistics about this `Commit`. Not returned by default.
   // For more information, see
   // [CommitRequest.return_commit_stats][google.spanner.v1.CommitRequest.return_commit_stats].
   CommitStats commit_stats = 2;
+
+  // You must examine and retry the commit if the following is populated.
+  oneof MultiplexedSessionRetry {
+    // If specified, transaction has not committed yet.
+    // You must retry the commit with the new precommit token.
+    MultiplexedSessionPrecommitToken precommit_token = 4;
+  }
+
+  // If `TransactionOptions.isolation_level` is set to
+  // `IsolationLevel.REPEATABLE_READ`, then the snapshot timestamp is the
+  // timestamp at which all reads in the transaction ran. This timestamp is
+  // never returned.
+  google.protobuf.Timestamp snapshot_timestamp = 5;
+
+  // Optional. A cache update expresses a set of changes the client should
+  // incorporate into its location cache. The client should discard the changes
+  // if they are older than the data it already has. This data can be obtained
+  // in response to requests that included a `RoutingHint` field, but may also
+  // be obtained by explicit location-fetching RPCs which may be added in the
+  // future.
+  CacheUpdate cache_update = 6 [(google.api.field_behavior) = OPTIONAL];
 }

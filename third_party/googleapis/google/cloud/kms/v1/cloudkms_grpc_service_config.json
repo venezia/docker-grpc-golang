@@ -9,6 +9,10 @@
         {
           "service": "google.cloud.kms.v1.KeyManagementService",
           "method": "ImportCryptoKeyVersion"
+        },
+        {
+          "service": "google.cloud.kms.v1.Autokey",
+          "method": "CreateKeyHandle"
         }
       ],
       "timeout": "60s"
@@ -36,6 +40,10 @@
           "method": "ListCryptoKeyVersions"
         },
         {
+          "service": "google.cloud.kms.v1.KeyManagementService",
+          "method": "ListRetiredResources"
+        },
+        {
           "service": "google.cloud.kms.v1.EkmService",
           "method": "GetEkmConnection"
         },
@@ -54,6 +62,10 @@
         {
           "service": "google.cloud.kms.v1.KeyManagementService",
           "method": "GetCryptoKeyVersion"
+        },
+        {
+          "service": "google.cloud.kms.v1.KeyManagementService",
+          "method": "GetRetiredResource"
         },
         {
           "service": "google.cloud.kms.v1.EkmService",
@@ -105,6 +117,14 @@
         },
         {
           "service": "google.cloud.kms.v1.KeyManagementService",
+          "method": "DeleteCryptoKey"
+        },
+        {
+          "service": "google.cloud.kms.v1.KeyManagementService",
+          "method": "DeleteCryptoKeyVersion"
+        },
+        {
+          "service": "google.cloud.kms.v1.KeyManagementService",
           "method": "GetPublicKey"
         },
         {
@@ -150,6 +170,62 @@
         {
           "service": "google.cloud.kms.v1.KeyManagementService",
           "method": "TestIamPermissions"
+        },
+        {
+          "service": "google.cloud.kms.v1.AutokeyAdmin",
+          "method": "UpdateAutokeyConfig"
+        },
+        {
+          "service": "google.cloud.kms.v1.AutokeyAdmin",
+          "method": "GetAutokeyConfig"
+        },
+        {
+          "service": "google.cloud.kms.v1.AutokeyAdmin",
+          "method": "ShowEffectiveAutokeyConfig"
+        },
+        {
+          "service": "google.cloud.kms.v1.Autokey",
+          "method": "GetKeyHandle"
+        },
+        {
+          "service": "google.cloud.kms.v1.Autokey",
+          "method": "ListKeyHandles"
+        },
+        {
+          "service": "google.cloud.kms.v1.HsmManagement",
+          "method": "ListSingleTenantHsmInstances"
+        },
+        {
+          "service": "google.cloud.kms.v1.HsmManagement",
+          "method": "GetSingleTenantHsmInstance"
+        },
+        {
+          "service": "google.cloud.kms.v1.HsmManagement",
+          "method": "CreateSingleTenantHsmInstance"
+        },
+        {
+          "service": "google.cloud.kms.v1.HsmManagement",
+          "method": "CreateSingleTenantHsmInstanceProposal"
+        },
+        {
+          "service": "google.cloud.kms.v1.HsmManagement",
+          "method": "ApproveSingleTenantHsmInstanceProposal"
+        },
+        {
+          "service": "google.cloud.kms.v1.HsmManagement",
+          "method": "ExecuteSingleTenantHsmInstanceProposal"
+        },
+        {
+          "service": "google.cloud.kms.v1.HsmManagement",
+          "method": "GetSingleTenantHsmInstanceProposal"
+        },
+        {
+          "service": "google.cloud.kms.v1.HsmManagement",
+          "method": "ListSingleTenantHsmInstanceProposals"
+        },
+        {
+          "service": "google.cloud.kms.v1.HsmManagement",
+          "method": "DeleteSingleTenantHsmInstanceProposal"
         }
       ],
       "timeout": "60s",

@@ -11,6 +11,8 @@ load(
     "@com_google_googleapis_imports//:imports.bzl",
     "ruby_cloud_gapic_library",
     "ruby_gapic_assembly_pkg",
+
+    "nodejs_gapic_combined_pkg"
 )
 
 # Generates a Ruby wrapper client for dialogflow.
@@ -22,7 +24,7 @@ ruby_cloud_gapic_library(
     extra_protoc_parameters = [
         "ruby-cloud-gem-name=google-cloud-dialogflow-cx",
         "ruby-cloud-env-prefix=DIALOGFLOW",
-        "ruby-cloud-wrapper-of=v3:0.3",
+        "ruby-cloud-wrapper-of=v3:0.24",
         "ruby-cloud-product-url=https://cloud.google.com/dialogflow",
         "ruby-cloud-api-id=dialogflow.googleapis.com",
         "ruby-cloud-api-shortname=dialogflow",
@@ -30,6 +32,7 @@ ruby_cloud_gapic_library(
     ],
     ruby_cloud_description = "Dialogflow is an end-to-end, build-once deploy-everywhere development suite for creating conversational interfaces for websites, mobile applications, popular messaging platforms, and IoT devices. You can use it to build interfaces (such as chatbots and conversational IVR) that enable natural and rich interactions between your users and your business. This client is for Dialogflow CX, providing an advanced agent type suitable for large or very complex agents.",
     ruby_cloud_title = "Dialogflow CX",
+    transport = "grpc+rest",
 )
 
 # Open Source package.
@@ -37,5 +40,16 @@ ruby_gapic_assembly_pkg(
     name = "google-cloud-dialogflow-cx-ruby",
     deps = [
         ":dialogflow_ruby_wrapper",
+    ],
+)
+
+nodejs_gapic_combined_pkg(
+    name = "google-cloud-dialogflow-cx-nodejs",
+    default_version = "v3",
+    release_level = "stable",
+    templates_excludes = ["package.json", ".Owlbot.yaml",],
+    deps = [
+        "//google/cloud/dialogflow/cx/v3:dialogflow-cx-v3-nodejs",
+        "//google/cloud/dialogflow/cx/v3beta1:dialogflow-cx-v3beta1-nodejs"
     ],
 )

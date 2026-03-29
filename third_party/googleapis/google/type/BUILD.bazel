@@ -103,9 +103,11 @@ proto_library(
 ##############################################################################
 # Java
 ##############################################################################
-load("@com_google_googleapis_imports//:imports.bzl",
-     "java_gapic_assembly_gradle_pkg",
-     "java_proto_library")
+load(
+    "@com_google_googleapis_imports//:imports.bzl",
+    "java_gapic_assembly_gradle_pkg",
+    "java_proto_library",
+)
 
 java_proto_library(
     name = "type_java_proto",
@@ -135,8 +137,8 @@ java_proto_library(
 # Open Source Packages
 java_gapic_assembly_gradle_pkg(
     name = "google-type-java",
+    transport = "grpc+rest",
     deps = [
-        ":type_java_proto",
         ":calendar_period_proto",
         ":color_proto",
         ":date_proto",
@@ -154,9 +156,9 @@ java_gapic_assembly_gradle_pkg(
         ":postal_address_proto",
         ":quaternion_proto",
         ":timeofday_proto",
+        ":type_java_proto",
     ],
 )
-
 
 ##############################################################################
 # Go
@@ -358,6 +360,7 @@ cc_proto_library(
 ##############################################################################
 load(
     "@com_google_googleapis_imports//:imports.bzl",
+    "py_gapic_assembly_pkg",
     "py_proto_library",
 )
 
@@ -444,6 +447,87 @@ py_proto_library(
 py_proto_library(
     name = "timeofday_py_proto",
     deps = [":timeofday_proto"],
+)
+
+# Open Source Packages
+py_gapic_assembly_pkg(
+    name = "type-py",
+    deps = [
+        ":calendar_period_proto",
+        ":calendar_period_py_proto",
+        ":color_proto",
+        ":color_py_proto",
+        ":date_proto",
+        ":date_py_proto",
+        ":datetime_proto",
+        ":datetime_py_proto",
+        ":dayofweek_proto",
+        ":dayofweek_py_proto",
+        ":decimal_proto",
+        ":decimal_py_proto",
+        ":expr_proto",
+        ":expr_py_proto",
+        ":fraction_proto",
+        ":fraction_py_proto",
+        ":interval_proto",
+        ":interval_py_proto",
+        ":latlng_proto",
+        ":latlng_py_proto",
+        ":localized_text_proto",
+        ":localized_text_py_proto",
+        ":money_proto",
+        ":money_py_proto",
+        ":month_proto",
+        ":month_py_proto",
+        ":phone_number_proto",
+        ":phone_number_py_proto",
+        ":postal_address_proto",
+        ":postal_address_py_proto",
+        ":quaternion_proto",
+        ":quaternion_py_proto",
+        ":timeofday_proto",
+        ":timeofday_py_proto",
+    ],
+)
+
+##############################################################################
+# PHP
+##############################################################################
+load(
+    "@com_google_googleapis_imports//:imports.bzl",
+    "php_gapic_assembly_pkg",
+    "php_proto_library",
+)
+
+php_proto_library(
+    name = "type_php_proto",
+    deps = [
+        ":calendar_period_proto",
+        ":color_proto",
+        ":date_proto",
+        ":datetime_proto",
+        ":dayofweek_proto",
+        ":decimal_proto",
+        ":expr_proto",
+        ":fraction_proto",
+        ":interval_proto",
+        ":latlng_proto",
+        ":localized_text_proto",
+        ":money_proto",
+        ":month_proto",
+        ":phone_number_proto",
+        ":postal_address_proto",
+        ":quaternion_proto",
+        ":timeofday_proto",
+    ],
+)
+
+# Please DO-NOT-REMOVE this section.
+# This is required to generate PHP files for these protos.
+# Open Source Packages
+php_gapic_assembly_pkg(
+    name = "google-type-php",
+    deps = [":type_php_proto"],
 )
 
 ##############################################################################

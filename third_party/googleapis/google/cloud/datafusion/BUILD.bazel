@@ -11,6 +11,7 @@ load(
     "@com_google_googleapis_imports//:imports.bzl",
     "ruby_cloud_gapic_library",
     "ruby_gapic_assembly_pkg",
+    "nodejs_gapic_combined_pkg"
 )
 
 # Generates a Ruby wrapper client for datafusion.
@@ -21,13 +22,14 @@ ruby_cloud_gapic_library(
     srcs = ["//google/cloud/datafusion/v1:datafusion_proto_with_info"],
     extra_protoc_parameters = [
         "ruby-cloud-gem-name=google-cloud-data_fusion",
-        "ruby-cloud-wrapper-of=v1:0.0",
+        "ruby-cloud-wrapper-of=v1:2.0",
         "ruby-cloud-product-url=https://cloud.google.com/data-fusion",
         "ruby-cloud-api-id=datafusion.googleapis.com",
         "ruby-cloud-api-shortname=datafusion",
     ],
     ruby_cloud_description = "Cloud Data Fusion is a fully managed, cloud-native, enterprise data integration service for quickly building and managing data pipelines.",
     ruby_cloud_title = "Cloud Data Fusion",
+    transport = "grpc+rest",
 )
 
 # Open Source package.
@@ -35,5 +37,16 @@ ruby_gapic_assembly_pkg(
     name = "google-cloud-datafusion-ruby",
     deps = [
         ":datafusion_ruby_wrapper",
+    ],
+)
+
+nodejs_gapic_combined_pkg(
+    name = "google-cloud-datafusion-nodejs",
+    default_version = "v1",
+    release_level = "stable",
+    templates_excludes = ["package.json", ".Owlbot.yaml"],
+    deps = [
+        "//google/cloud/datafusion/v1:datafusion-v1-nodejs",
+        "//google/cloud/datafusion/v1beta1:datafusion-v1beta1-nodejs"
     ],
 )

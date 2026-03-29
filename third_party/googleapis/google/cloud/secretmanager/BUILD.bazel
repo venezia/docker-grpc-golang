@@ -11,6 +11,7 @@ load(
     "@com_google_googleapis_imports//:imports.bzl",
     "ruby_cloud_gapic_library",
     "ruby_gapic_assembly_pkg",
+    "nodejs_gapic_combined_pkg"
 )
 
 # Generates a Ruby wrapper client for secretmanager.
@@ -22,7 +23,7 @@ ruby_cloud_gapic_library(
     extra_protoc_parameters = [
         "ruby-cloud-gem-name=google-cloud-secret_manager",
         "ruby-cloud-env-prefix=SECRET_MANAGER",
-        "ruby-cloud-wrapper-of=v1:0.1;v1beta1:0.3",
+        "ruby-cloud-wrapper-of=v1:1.2",
         "ruby-cloud-product-url=https://cloud.google.com/secret-manager",
         "ruby-cloud-api-id=secretmanager.googleapis.com",
         "ruby-cloud-api-shortname=secretmanager",
@@ -36,5 +37,16 @@ ruby_gapic_assembly_pkg(
     name = "google-cloud-secretmanager-ruby",
     deps = [
         ":secretmanager_ruby_wrapper",
+    ],
+)
+
+nodejs_gapic_combined_pkg(
+    name = "google-cloud-secretmanager-nodejs",
+    default_version = "v1",
+    release_level = "stable",
+    templates_excludes = ["package.json", ".OwlBot.yaml"],
+    deps = [
+        "//google/cloud/secretmanager/v1:secretmanager-v1-nodejs",
+        "//google/cloud/secretmanager/v1beta2:secretmanager-v1beta2-nodejs"
     ],
 )

@@ -4,7 +4,9 @@ name: firestore.googleapis.com
 title: Cloud Firestore API
 
 apis:
+- name: google.cloud.location.Locations
 - name: google.firestore.v1.Firestore
+- name: google.longrunning.Operations
 
 documentation:
   summary: |-
@@ -15,18 +17,15 @@ documentation:
     description: Gets information about a location.
 
   - selector: google.cloud.location.Locations.ListLocations
-    description: Lists information about the supported locations for this service.
+    description: |-
+      Lists information about the supported locations for this service.
+      This method can be called in two ways:
 
-backend:
-  rules:
-  - selector: google.cloud.location.Locations.GetLocation
-    deadline: 295.0
-  - selector: google.cloud.location.Locations.ListLocations
-    deadline: 295.0
-  - selector: 'google.firestore.v1.Firestore.*'
-    deadline: 295.0
-  - selector: 'google.longrunning.Operations.*'
-    deadline: 295.0
+      *   **List all public locations:** Use the path `GET /v1/locations`.
+      *   **List project-visible locations:** Use the path
+      `GET /v1/projects/{project_id}/locations`. This may include public
+      locations as well as private or other locations specifically visible
+      to the project.
 
 http:
   rules:
@@ -62,3 +61,10 @@ authentication:
       canonical_scopes: |-
         https://www.googleapis.com/auth/cloud-platform,
         https://www.googleapis.com/auth/datastore
+
+publishing:
+  library_settings:
+  - version: google.firestore.v1
+    java_settings:
+      library_package: com.google.cloud.firestore.v1
+      common: {}

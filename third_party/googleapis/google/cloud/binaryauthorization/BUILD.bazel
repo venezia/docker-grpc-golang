@@ -11,6 +11,7 @@ load(
     "@com_google_googleapis_imports//:imports.bzl",
     "ruby_cloud_gapic_library",
     "ruby_gapic_assembly_pkg",
+    "nodejs_gapic_combined_pkg"
 )
 
 # Generates a Ruby wrapper client for binaryauthorization.
@@ -22,7 +23,7 @@ ruby_cloud_gapic_library(
     extra_protoc_parameters = [
         "ruby-cloud-gem-name=google-cloud-binary_authorization",
         "ruby-cloud-env-prefix=BINARY_AUTHORIZATION",
-        "ruby-cloud-wrapper-of=v1:0.0;v1beta1:0.0",
+        "ruby-cloud-wrapper-of=v1:1.2",
         "ruby-cloud-product-url=https://cloud.google.com/binary-authorization/",
         "ruby-cloud-api-id=binaryauthorization.googleapis.com",
         "ruby-cloud-api-shortname=binaryauthorization",
@@ -30,6 +31,7 @@ ruby_cloud_gapic_library(
     ],
     ruby_cloud_description = "Binary Authorization is a service on Google Cloud that provides centralized software supply-chain security for applications that run on Google Kubernetes Engine (GKE) and GKE on-prem.",
     ruby_cloud_title = "Binary Authorization",
+    transport = "grpc+rest",
 )
 
 # Open Source package.
@@ -37,5 +39,16 @@ ruby_gapic_assembly_pkg(
     name = "google-cloud-binaryauthorization-ruby",
     deps = [
         ":binaryauthorization_ruby_wrapper",
+    ],
+)
+
+nodejs_gapic_combined_pkg(
+    name = "google-cloud-binaryauthorization-nodejs",
+    default_version = "v1",
+    release_level = "stable",
+    templates_excludes = ["package.json", ".OwlBot.yaml"],
+    deps = [
+        "//google/cloud/binaryauthorization/v1:binaryauthorization-v1-nodejs",
+        "//google/cloud/binaryauthorization/v1beta1:binaryauthorization-v1beta1-nodejs"
     ],
 )

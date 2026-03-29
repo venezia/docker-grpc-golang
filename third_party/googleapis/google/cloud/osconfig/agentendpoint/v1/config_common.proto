@@ -1,4 +1,4 @@
-// Copyright 2021 Google LLC
+// Copyright 2026 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@ syntax = "proto3";
 
 package google.cloud.osconfig.agentendpoint.v1;
 
-option go_package = "google.golang.org/genproto/googleapis/cloud/osconfig/agentendpoint/v1;agentendpoint";
+option go_package = "cloud.google.com/go/osconfig/agentendpoint/apiv1/agentendpointpb;agentendpointpb";
 option java_multiple_files = true;
 option java_outer_classname = "ConfigCommonProto";
 option java_package = "com.google.cloud.osconfig.agentendpoint.v1";
@@ -35,10 +35,10 @@ message OSPolicyResourceConfigStep {
     // Check the current desired state status of the resource.
     DESIRED_STATE_CHECK = 2;
 
-    // Enforce the desired state for a resource that is not in desired state.
+    // Apply the desired state for a resource that is not in desired state.
     DESIRED_STATE_ENFORCEMENT = 3;
 
-    // Re-check desired state status for a resource after enforcement of all
+    // Re-check desired state status for a resource after applying all
     // resources in the current configuration run.
     //
     // This step is used to determine the final desired state status for the

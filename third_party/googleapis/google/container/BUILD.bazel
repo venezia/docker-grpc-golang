@@ -11,6 +11,7 @@ load(
     "@com_google_googleapis_imports//:imports.bzl",
     "ruby_cloud_gapic_library",
     "ruby_gapic_assembly_pkg",
+    "nodejs_gapic_combined_pkg"
 )
 
 # Generates a Ruby wrapper client for container.
@@ -22,14 +23,14 @@ ruby_cloud_gapic_library(
     extra_protoc_parameters = [
         "ruby-cloud-gem-name=google-cloud-container",
         "ruby-cloud-env-prefix=CONTAINER",
-        "ruby-cloud-wrapper-of=v1:0.0;v1beta1:0.0",
+        "ruby-cloud-wrapper-of=v1:1.6",
         "ruby-cloud-product-url=https://cloud.google.com/kubernetes-engine",
         "ruby-cloud-api-id=container.googleapis.com",
         "ruby-cloud-api-shortname=container",
-        "ruby-cloud-migration-version=1.0",
     ],
     ruby_cloud_description = "Builds and manages container-based applications, powered by the open source Kubernetes technology.",
     ruby_cloud_title = "Kubernetes Engine",
+    transport = "grpc",
 )
 
 # Open Source package.
@@ -37,5 +38,16 @@ ruby_gapic_assembly_pkg(
     name = "google-cloud-container-ruby",
     deps = [
         ":container_ruby_wrapper",
+    ],
+)
+
+nodejs_gapic_combined_pkg(
+    name = "google-container-nodejs",
+    default_version = "v1",
+    release_level = "stable",
+    templates_excludes = ["package.json", ".OwlBot.yaml"],
+    deps = [
+        "//google/container/v1:container-v1-nodejs",
+        "//google/container/v1beta1:container-v1beta1-nodejs"
     ],
 )

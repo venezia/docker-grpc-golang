@@ -6,6 +6,11 @@ title: reCAPTCHA Enterprise API
 apis:
 - name: google.cloud.recaptchaenterprise.v1beta1.RecaptchaEnterpriseServiceV1Beta1
 
+documentation:
+  summary: |-
+    Help protect your website from fraudulent activity, spam, and abuse without
+    creating friction.
+
 authentication:
   rules:
   - selector: google.cloud.recaptchaenterprise.v1beta1.RecaptchaEnterpriseServiceV1Beta1.AnnotateAssessment
@@ -16,3 +21,9 @@ authentication:
     oauth:
       canonical_scopes: |-
         https://www.googleapis.com/auth/cloud-platform
+
+publishing:
+  library_settings:
+  - version: google.cloud.recaptchaenterprise.v1beta1
+    java_settings:
+      library_package: com.google.cloud.recaptchaenterprise.v1beta1

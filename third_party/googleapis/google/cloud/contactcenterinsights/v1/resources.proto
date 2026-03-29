@@ -1,4 +1,4 @@
-// Copyright 2022 Google LLC
+// Copyright 2025 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,23 +22,56 @@ import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 
 option csharp_namespace = "Google.Cloud.ContactCenterInsights.V1";
-option go_package = "google.golang.org/genproto/googleapis/cloud/contactcenterinsights/v1;contactcenterinsights";
+option go_package = "cloud.google.com/go/contactcenterinsights/apiv1/contactcenterinsightspb;contactcenterinsightspb";
 option java_multiple_files = true;
 option java_outer_classname = "ResourcesProto";
 option java_package = "com.google.cloud.contactcenterinsights.v1";
 option php_namespace = "Google\\Cloud\\ContactCenterInsights\\V1";
 option ruby_package = "Google::Cloud::ContactCenterInsights::V1";
 option (google.api.resource_definition) = {
+  type: "dialogflow.googleapis.com/ConversationProfile"
+  pattern: "projects/{project}/locations/{location}/conversationProfiles/{conversation_profile}"
+};
+option (google.api.resource_definition) = {
   type: "dialogflow.googleapis.com/Participant"
   pattern: "projects/{project}/conversations/{conversation}/participants/{participant}"
   pattern: "projects/{project}/locations/{location}/conversations/{conversation}/participants/{participant}"
 };
+option (google.api.resource_definition) = {
+  type: "speech.googleapis.com/Recognizer"
+  pattern: "projects/{project}/locations/{location}/recognizers/{recognizer}"
+};
+
+// Enum for the different types of issues a tuning dataset can have.
+// These warnings are currentlyraised when trying to validate a dataset for
+// tuning a scorecard.
+enum DatasetValidationWarning {
+  // Unspecified data validation warning.
+  DATASET_VALIDATION_WARNING_UNSPECIFIED = 0;
+
+  // A non-trivial percentage of the feedback labels are invalid.
+  TOO_MANY_INVALID_FEEDBACK_LABELS = 1;
+
+  // The quantity of valid feedback labels provided is less than the
+  // recommended minimum.
+  INSUFFICIENT_FEEDBACK_LABELS = 2;
+
+  // One or more of the answers have less than the recommended minimum of
+  // feedback labels.
+  INSUFFICIENT_FEEDBACK_LABELS_PER_ANSWER = 3;
+
+  // All the labels in the dataset come from a single answer choice.
+  ALL_FEEDBACK_LABELS_HAVE_THE_SAME_ANSWER = 4;
+}
 
 // The conversation resource.
 message Conversation {
   option (google.api.resource) = {
     type: "contactcenterinsights.googleapis.com/Conversation"
     pattern: "projects/{project}/locations/{location}/conversations/{conversation}"
+    pattern: "projects/{project}/locations/{location}/authorizedViewSets/{authorized_view_set}/authorizedViews/{authorized_view}/conversations/{conversation}"
+    plural: "conversations"
+    singular: "conversation"
   };
 
   // Call-specific metadata.
@@ -48,6 +81,40 @@ message Conversation {
 
     // The audio channel that contains the agent.
     int32 agent_channel = 2;
+  }
+
+  // Conversation metadata related to quality management.
+  message QualityMetadata {
+    // Information about an agent involved in the conversation.
+    message AgentInfo {
+      // A user-specified string representing the agent.
+      string agent_id = 1;
+
+      // The agent's name.
+      string display_name = 2;
+
+      // A user-specified string representing the agent's team.
+      string team = 3;
+
+      // A user-provided string indicating the outcome of the agent's segment of
+      // the call.
+      string disposition_code = 4;
+
+      // The agent type, e.g. HUMAN_AGENT.
+      ConversationParticipant.Role agent_type = 5;
+    }
+
+    // An arbitrary integer value indicating the customer's satisfaction rating.
+    int32 customer_satisfaction_rating = 1;
+
+    // The amount of time the customer waited to connect with an agent.
+    google.protobuf.Duration wait_duration = 2;
+
+    // An arbitrary string value specifying the menu path the customer took.
+    string menu_path = 3;
+
+    // Information about agents involved in the call.
+    repeated AgentInfo agent_info = 4;
   }
 
   // A message representing the transcript of a conversation.
@@ -146,7 +213,8 @@ message Conversation {
 
     // Input only. The TTL for this resource. If specified, then this TTL will
     // be used to calculate the expire time.
-    google.protobuf.Duration ttl = 16 [(google.api.field_behavior) = INPUT_ONLY];
+    google.protobuf.Duration ttl = 16
+        [(google.api.field_behavior) = INPUT_ONLY];
   }
 
   // Immutable. The resource name of the conversation.
@@ -158,10 +226,12 @@ message Conversation {
   ConversationDataSource data_source = 2;
 
   // Output only. The time at which the conversation was created.
-  google.protobuf.Timestamp create_time = 3 [(google.api.field_behavior) = OUTPUT_ONLY];
+  google.protobuf.Timestamp create_time = 3
+      [(google.api.field_behavior) = OUTPUT_ONLY];
 
   // Output only. The most recent time at which the conversation was updated.
-  google.protobuf.Timestamp update_time = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
+  google.protobuf.Timestamp update_time = 4
+      [(google.api.field_behavior) = OUTPUT_ONLY];
 
   // The time at which the conversation started.
   google.protobuf.Timestamp start_time = 17;
@@ -173,18 +243,28 @@ message Conversation {
   // the conversation.
   string agent_id = 5;
 
-  // A map for the user to specify any custom fields. A maximum of 20 labels per
-  // conversation is allowed, with a maximum of 256 characters per entry.
+  // A map for the user to specify any custom fields. A maximum of 100 labels
+  // per conversation is allowed, with a maximum of 256 characters per entry.
   map<string, string> labels = 6;
+
+  // Conversation metadata related to quality management.
+  QualityMetadata quality_metadata = 24;
+
+  // Input only. JSON metadata encoded as a string.
+  // This field is primarily used by Insights integrations with various telphony
+  // systems and must be in one of Insight's supported formats.
+  string metadata_json = 25 [(google.api.field_behavior) = INPUT_ONLY];
 
   // Output only. The conversation transcript.
   Transcript transcript = 8 [(google.api.field_behavior) = OUTPUT_ONLY];
 
-  // Immutable. The conversation medium, if unspecified will default to PHONE_CALL.
+  // Immutable. The conversation medium, if unspecified will default to
+  // PHONE_CALL.
   Medium medium = 9 [(google.api.field_behavior) = IMMUTABLE];
 
   // Output only. The duration of the conversation.
-  google.protobuf.Duration duration = 10 [(google.api.field_behavior) = OUTPUT_ONLY];
+  google.protobuf.Duration duration = 10
+      [(google.api.field_behavior) = OUTPUT_ONLY];
 
   // Output only. The number of turns in the conversation.
   int32 turn_count = 11 [(google.api.field_behavior) = OUTPUT_ONLY];
@@ -192,14 +272,20 @@ message Conversation {
   // Output only. The conversation's latest analysis, if one exists.
   Analysis latest_analysis = 12 [(google.api.field_behavior) = OUTPUT_ONLY];
 
-  // Output only. The annotations that were generated during the customer and agent
-  // interaction.
-  repeated RuntimeAnnotation runtime_annotations = 13 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // Output only. Latest summary of the conversation.
+  ConversationSummarizationSuggestionData latest_summary = 20
+      [(google.api.field_behavior) = OUTPUT_ONLY];
 
-  // Output only. All the matched Dialogflow intents in the call. The key corresponds to a
-  // Dialogflow intent, format:
+  // Output only. The annotations that were generated during the customer and
+  // agent interaction.
+  repeated RuntimeAnnotation runtime_annotations = 13
+      [(google.api.field_behavior) = OUTPUT_ONLY];
+
+  // Output only. All the matched Dialogflow intents in the call. The key
+  // corresponds to a Dialogflow intent, format:
   // projects/{project}/agent/{agent}/intents/{intent}
-  map<string, DialogflowIntent> dialogflow_intents = 18 [(google.api.field_behavior) = OUTPUT_ONLY];
+  map<string, DialogflowIntent> dialogflow_intents = 18
+      [(google.api.field_behavior) = OUTPUT_ONLY];
 
   // Obfuscated user ID which the customer sent to us.
   string obfuscated_user_id = 21;
@@ -210,6 +296,9 @@ message Analysis {
   option (google.api.resource) = {
     type: "contactcenterinsights.googleapis.com/Analysis"
     pattern: "projects/{project}/locations/{location}/conversations/{conversation}/analyses/{analysis}"
+    pattern: "projects/{project}/locations/{location}/authorizedViewSets/{authorized_view_set}/authorizedViews/{authorized_view}/conversations/{conversation}/analyses/{analysis}"
+    plural: "analyses"
+    singular: "analysis"
   };
 
   // Immutable. The resource name of the analysis.
@@ -218,15 +307,22 @@ message Analysis {
   string name = 1 [(google.api.field_behavior) = IMMUTABLE];
 
   // Output only. The time at which the analysis was requested.
-  google.protobuf.Timestamp request_time = 2 [(google.api.field_behavior) = OUTPUT_ONLY];
+  google.protobuf.Timestamp request_time = 2
+      [(google.api.field_behavior) = OUTPUT_ONLY];
 
-  // Output only. The time at which the analysis was created, which occurs when the
-  // long-running operation completes.
-  google.protobuf.Timestamp create_time = 3 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // Output only. The time at which the analysis was created, which occurs when
+  // the long-running operation completes.
+  google.protobuf.Timestamp create_time = 3
+      [(google.api.field_behavior) = OUTPUT_ONLY];
 
-  // Output only. The result of the analysis, which is populated when the analysis
-  // finishes.
-  AnalysisResult analysis_result = 7 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // Output only. The result of the analysis, which is populated when the
+  // analysis finishes.
+  AnalysisResult analysis_result = 7
+      [(google.api.field_behavior) = OUTPUT_ONLY];
+
+  // To select the annotators to run and the phrase matchers to use
+  // (if any). If not specified, all annotators will be run.
+  AnnotatorSelector annotator_selector = 8;
 }
 
 // The conversation source, which is a combination of transcript and audio.
@@ -247,8 +343,8 @@ message GcsSource {
   // audio.
   string audio_uri = 1;
 
-  // Immutable. Cloud Storage URI that points to a file that contains the conversation
-  // transcript.
+  // Immutable. Cloud Storage URI that points to a file that contains the
+  // conversation transcript.
   string transcript_uri = 2 [(google.api.field_behavior) = IMMUTABLE];
 }
 
@@ -257,7 +353,8 @@ message DialogflowSource {
   // Output only. The name of the Dialogflow conversation that this conversation
   // resource is derived from. Format:
   // projects/{project}/locations/{location}/conversations/{conversation}
-  string dialogflow_conversation = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
+  string dialogflow_conversation = 1
+      [(google.api.field_behavior) = OUTPUT_ONLY];
 
   // Cloud Storage URI that points to a file that contains the conversation
   // audio.
@@ -277,6 +374,9 @@ message AnalysisResult {
     // Overall conversation-level sentiment for each channel of the call.
     repeated ConversationLevelSentiment sentiments = 4;
 
+    // Overall conversation-level silence during the call.
+    ConversationLevelSilence silence = 11;
+
     // All the matched intents in the call.
     map<string, Intent> intents = 6;
 
@@ -285,6 +385,9 @@ message AnalysisResult {
 
     // Overall conversation-level issue modeling result.
     IssueModelResult issue_model_result = 8;
+
+    // Results of scoring QaScorecards.
+    repeated QaScorecardResult qa_scorecard_results = 10;
   }
 
   // Metadata discovered during analysis.
@@ -302,11 +405,47 @@ message IssueModelResult {
   // Issue model that generates the result.
   // Format: projects/{project}/locations/{location}/issueModels/{issue_model}
   string issue_model = 1 [(google.api.resource_reference) = {
-                            type: "contactcenterinsights.googleapis.com/IssueModel"
-                          }];
+    type: "contactcenterinsights.googleapis.com/IssueModel"
+  }];
 
   // All the matched issues.
   repeated IssueAssignment issues = 2;
+}
+
+// Represents a conversation, resource, and label provided by the user.
+message FeedbackLabel {
+  option (google.api.resource) = {
+    type: "contactcenterinsights.googleapis.com/FeedbackLabel"
+    pattern: "projects/{project}/locations/{location}/conversations/{conversation}/feedbackLabels/{feedback_label}"
+    pattern: "projects/{project}/locations/{location}/authorizedViewSets/{authorized_view_set}/authorizedViews/{authorized_view}/conversations/{conversation}/feedbackLabels/{feedback_label}"
+    plural: "feedbackLabels"
+    singular: "feedbackLabel"
+  };
+
+  // Label type.
+  oneof label_type {
+    // String label.
+    string label = 4;
+
+    // QaAnswer label.
+    QaAnswer.AnswerValue qa_answer_label = 7;
+  }
+
+  // Immutable. Resource name of the FeedbackLabel.
+  // Format:
+  // projects/{project}/locations/{location}/conversations/{conversation}/feedbackLabels/{feedback_label}
+  string name = 1 [(google.api.field_behavior) = IMMUTABLE];
+
+  // Resource name of the resource to be labeled.
+  string labeled_resource = 3;
+
+  // Output only. Create time of the label.
+  google.protobuf.Timestamp create_time = 5
+      [(google.api.field_behavior) = OUTPUT_ONLY];
+
+  // Output only. Update time of the label.
+  google.protobuf.Timestamp update_time = 6
+      [(google.api.field_behavior) = OUTPUT_ONLY];
 }
 
 // One channel of conversation-level sentiment data.
@@ -318,6 +457,15 @@ message ConversationLevelSentiment {
   SentimentData sentiment_data = 2;
 }
 
+// Conversation-level silence data.
+message ConversationLevelSilence {
+  // Amount of time calculated to be in silence.
+  google.protobuf.Duration silence_duration = 1;
+
+  // Percentage of the total conversation spent in silence.
+  float silence_percentage = 2;
+}
+
 // Information about the issue.
 message IssueAssignment {
   // Resource name of the assigned issue.
@@ -327,8 +475,8 @@ message IssueAssignment {
   // currently bounded on [0,1].
   double score = 2;
 
-  // Immutable. Display name of the assigned issue. This field is set at time of analyis
-  // and immutable since then.
+  // Immutable. Display name of the assigned issue. This field is set at time of
+  // analyis and immutable since then.
   string display_name = 3 [(google.api.field_behavior) = IMMUTABLE];
 }
 
@@ -356,6 +504,9 @@ message CallAnnotation {
 
     // Data specifying a phrase match.
     PhraseMatchData phrase_match_data = 17;
+
+    // Data specifying an issue match.
+    IssueMatchData issue_match_data = 18;
   }
 
   // The channel of the audio where the annotation occurs. For single-channel
@@ -519,19 +670,13 @@ message DialogflowIntent {
 }
 
 // The data for an interruption annotation.
-message InterruptionData {
-
-}
+message InterruptionData {}
 
 // The data for a silence annotation.
-message SilenceData {
-
-}
+message SilenceData {}
 
 // The data for a hold annotation.
-message HoldData {
-
-}
+message HoldData {}
 
 // The data for an entity mention annotation.
 // This represents a mention of an `Entity` in the conversation.
@@ -579,6 +724,12 @@ message SentimentData {
   float score = 2;
 }
 
+// The data for an issue match annotation.
+message IssueMatchData {
+  // Information about the issue's assignment.
+  IssueAssignment issue_assignment = 1;
+}
+
 // The issue model resource.
 message IssueModel {
   option (google.api.resource) = {
@@ -594,7 +745,8 @@ message IssueModel {
     Conversation.Medium medium = 1 [deprecated = true];
 
     // Output only. Number of conversations used in training. Output only.
-    int64 training_conversations_count = 2 [(google.api.field_behavior) = OUTPUT_ONLY];
+    int64 training_conversations_count = 2
+        [(google.api.field_behavior) = OUTPUT_ONLY];
 
     // A filter to reduce the conversations used for training the model to a
     // specific subset.
@@ -623,6 +775,18 @@ message IssueModel {
     DELETING = 5;
   }
 
+  // Type of the model.
+  enum ModelType {
+    // Unspecified model type.
+    MODEL_TYPE_UNSPECIFIED = 0;
+
+    // Type V1.
+    TYPE_V1 = 1;
+
+    // Type V2.
+    TYPE_V2 = 2;
+  }
+
   // Immutable. The resource name of the issue model.
   // Format:
   // projects/{project}/locations/{location}/issueModels/{issue_model}
@@ -632,10 +796,15 @@ message IssueModel {
   string display_name = 2;
 
   // Output only. The time at which this issue model was created.
-  google.protobuf.Timestamp create_time = 3 [(google.api.field_behavior) = OUTPUT_ONLY];
+  google.protobuf.Timestamp create_time = 3
+      [(google.api.field_behavior) = OUTPUT_ONLY];
 
   // Output only. The most recent time at which the issue model was updated.
-  google.protobuf.Timestamp update_time = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
+  google.protobuf.Timestamp update_time = 4
+      [(google.api.field_behavior) = OUTPUT_ONLY];
+
+  // Output only. Number of issues in this issue model.
+  int64 issue_count = 8 [(google.api.field_behavior) = OUTPUT_ONLY];
 
   // Output only. State of the model.
   State state = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
@@ -643,11 +812,18 @@ message IssueModel {
   // Configs for the input data that used to create the issue model.
   InputDataConfig input_data_config = 6;
 
-  // Output only. Immutable. The issue model's label statistics on its training data.
+  // Output only. Immutable. The issue model's label statistics on its training
+  // data.
   IssueModelLabelStats training_stats = 7 [
     (google.api.field_behavior) = OUTPUT_ONLY,
     (google.api.field_behavior) = IMMUTABLE
   ];
+
+  // Type of the model.
+  ModelType model_type = 9;
+
+  // Language of the model.
+  string language_code = 10;
 }
 
 // The issue resource.
@@ -666,10 +842,20 @@ message Issue {
   string display_name = 2;
 
   // Output only. The time at which this issue was created.
-  google.protobuf.Timestamp create_time = 3 [(google.api.field_behavior) = OUTPUT_ONLY];
+  google.protobuf.Timestamp create_time = 3
+      [(google.api.field_behavior) = OUTPUT_ONLY];
 
   // Output only. The most recent time that this issue was updated.
-  google.protobuf.Timestamp update_time = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
+  google.protobuf.Timestamp update_time = 4
+      [(google.api.field_behavior) = OUTPUT_ONLY];
+
+  // Output only. Resource names of the sample representative utterances that
+  // match to this issue.
+  repeated string sample_utterances = 6
+      [(google.api.field_behavior) = OUTPUT_ONLY];
+
+  // Representative description of the issue.
+  string display_description = 14;
 }
 
 // Aggregated statistics about an issue model.
@@ -737,9 +923,10 @@ message PhraseMatcher {
   // it will default to `revision_id`.
   string version_tag = 3;
 
-  // Output only. The timestamp of when the revision was created. It is also the create time
-  // when a new matcher is added.
-  google.protobuf.Timestamp revision_create_time = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // Output only. The timestamp of when the revision was created. It is also the
+  // create time when a new matcher is added.
+  google.protobuf.Timestamp revision_create_time = 4
+      [(google.api.field_behavior) = OUTPUT_ONLY];
 
   // The human-readable name of the phrase matcher.
   string display_name = 5;
@@ -753,8 +940,10 @@ message PhraseMatcher {
   // A list of phase match rule groups that are included in this matcher.
   repeated PhraseMatchRuleGroup phrase_match_rule_groups = 8;
 
-  // Output only. The most recent time at which the activation status was updated.
-  google.protobuf.Timestamp activation_update_time = 9 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // Output only. The most recent time at which the activation status was
+  // updated.
+  google.protobuf.Timestamp activation_update_time = 9
+      [(google.api.field_behavior) = OUTPUT_ONLY];
 
   // The role whose utterances the phrase matcher should be matched
   // against. If the role is ROLE_UNSPECIFIED it will be matched against any
@@ -762,7 +951,8 @@ message PhraseMatcher {
   ConversationParticipant.Role role_match = 10;
 
   // Output only. The most recent time at which the phrase matcher was updated.
-  google.protobuf.Timestamp update_time = 11 [(google.api.field_behavior) = OUTPUT_ONLY];
+  google.protobuf.Timestamp update_time = 11
+      [(google.api.field_behavior) = OUTPUT_ONLY];
 }
 
 // A message representing a rule in the phrase matcher.
@@ -783,7 +973,7 @@ message PhraseMatchRuleGroup {
   // Required. The type of this phrase match rule group.
   PhraseMatchRuleGroupType type = 1 [(google.api.field_behavior) = REQUIRED];
 
-  // A list of phase match rules that are included in this group.
+  // A list of phrase match rules that are included in this group.
   repeated PhraseMatchRule phrase_match_rules = 2;
 }
 
@@ -816,7 +1006,12 @@ message ExactMatchConfig {
   bool case_sensitive = 1;
 }
 
-// The settings resource.
+// The CCAI Insights project wide settings.
+// Use these settings to configure the behavior of Insights.
+// View these settings with
+// [`getsettings`](https://cloud.google.com/contact-center/insights/docs/reference/rest/v1/projects.locations/getSettings)
+// and change the settings with
+// [`updateSettings`](https://cloud.google.com/contact-center/insights/docs/reference/rest/v1/projects.locations/updateSettings).
 message Settings {
   option (google.api.resource) = {
     type: "contactcenterinsights.googleapis.com/Settings"
@@ -828,6 +1023,14 @@ message Settings {
     // Percentage of conversations created using Dialogflow runtime integration
     // to analyze automatically, between [0, 100].
     double runtime_integration_analysis_percentage = 1;
+
+    // Percentage of conversations created using the UploadConversation endpoint
+    // to analyze automatically, between [0, 100].
+    double upload_conversation_analysis_percentage = 6;
+
+    // To select the annotators to run and the phrase matchers to use
+    // (if any). If not specified, all annotators will be run.
+    AnnotatorSelector annotator_selector = 5;
   }
 
   // Immutable. The resource name of the settings resource.
@@ -836,10 +1039,12 @@ message Settings {
   string name = 1 [(google.api.field_behavior) = IMMUTABLE];
 
   // Output only. The time at which the settings was created.
-  google.protobuf.Timestamp create_time = 2 [(google.api.field_behavior) = OUTPUT_ONLY];
+  google.protobuf.Timestamp create_time = 2
+      [(google.api.field_behavior) = OUTPUT_ONLY];
 
   // Output only. The time at which the settings were last updated.
-  google.protobuf.Timestamp update_time = 3 [(google.api.field_behavior) = OUTPUT_ONLY];
+  google.protobuf.Timestamp update_time = 3
+      [(google.api.field_behavior) = OUTPUT_ONLY];
 
   // A language code to be applied to each transcript segment unless the segment
   // already specifies a language code. Language code defaults to "en-US" if it
@@ -862,8 +1067,11 @@ message Settings {
   // * "create-analysis": Notify each time an analysis is created.
   // * "create-conversation": Notify each time a conversation is created.
   // * "export-insights-data": Notify each time an export is complete.
+  // * "ingest-conversations": Notify each time an IngestConversations LRO is
+  // complete.
   // * "update-conversation": Notify each time a conversation is updated via
   // UpdateConversation.
+  // * "upload-conversation": Notify when an UploadConversation LRO is complete.
   //
   // Values are Pub/Sub topics. The format of each Pub/Sub topic is:
   // projects/{project}/topics/{topic}
@@ -871,10 +1079,154 @@ message Settings {
 
   // Default analysis settings.
   AnalysisConfig analysis_config = 7;
+
+  // Default DLP redaction resources to be applied while ingesting
+  // conversations. This applies to conversations ingested from the
+  // `UploadConversation` and `IngestConversations` endpoints, including
+  // conversations coming from CCAI Platform.
+  RedactionConfig redaction_config = 10;
+
+  // Optional. Default Speech-to-Text resources to use while ingesting audio
+  // files. Optional, CCAI Insights will create a default if not provided. This
+  // applies to conversations ingested from the `UploadConversation` and
+  // `IngestConversations` endpoints, including conversations coming from CCAI
+  // Platform.
+  SpeechConfig speech_config = 11 [(google.api.field_behavior) = OPTIONAL];
+}
+
+// The CCAI Insights project wide analysis rule. This rule will be applied to
+// all conversations that match the filter defined in the rule. For a
+// conversation matches the filter, the annotators specified in the rule will be
+// run. If a conversation matches multiple rules, a union of all the annotators
+// will be run. One project can have multiple analysis rules.
+message AnalysisRule {
+  option (google.api.resource) = {
+    type: "contactcenterinsights.googleapis.com/AnalysisRule"
+    pattern: "projects/{project}/locations/{location}/analysisRules/{analysis_rule}"
+    plural: "analysisRules"
+    singular: "analysisRule"
+  };
+
+  // Identifier. The resource name of the analysis rule.
+  // Format:
+  // projects/{project}/locations/{location}/analysisRules/{analysis_rule}
+  string name = 1 [(google.api.field_behavior) = IDENTIFIER];
+
+  // Output only. The time at which this analysis rule was created.
+  google.protobuf.Timestamp create_time = 2
+      [(google.api.field_behavior) = OUTPUT_ONLY];
+
+  // Output only. The most recent time at which this analysis rule was updated.
+  google.protobuf.Timestamp update_time = 3
+      [(google.api.field_behavior) = OUTPUT_ONLY];
+
+  // Display Name of the analysis rule.
+  optional string display_name = 4;
+
+  // Filter for the conversations that should apply this analysis
+  // rule. An empty filter means this analysis rule applies to all
+  // conversations.
+  string conversation_filter = 5;
+
+  // Selector of annotators to run and the phrase matchers to use for
+  // conversations that matches the conversation_filter. If not specified, NO
+  // annotators will be run.
+  AnnotatorSelector annotator_selector = 6;
+
+  // Percentage of conversations that we should apply this analysis setting
+  // automatically, between [0, 1]. For example, 0.1 means 10%. Conversations
+  // are sampled in a determenestic way. The original runtime_percentage &
+  // upload percentage will be replaced by defining filters on the conversation.
+  double analysis_percentage = 7;
+
+  // If true, apply this rule to conversations. Otherwise, this rule is
+  // inactive and saved as a draft.
+  bool active = 8;
+}
+
+// A customer-managed encryption key specification that can be applied to all
+// created resources (e.g. `Conversation`).
+message EncryptionSpec {
+  option (google.api.resource) = {
+    type: "contactcenterinsights.googleapis.com/EncryptionSpec"
+    pattern: "projects/{project}/locations/{location}/encryptionSpec"
+  };
+
+  // Immutable. The resource name of the encryption key specification resource.
+  // Format:
+  // projects/{project}/locations/{location}/encryptionSpec
+  string name = 1 [(google.api.field_behavior) = IMMUTABLE];
+
+  // Required. The name of customer-managed encryption key that is used to
+  // secure a resource and its sub-resources. If empty, the resource is secured
+  // by our default encryption key. Only the key in the same location as this
+  // resource is allowed to be used for encryption. Format:
+  // `projects/{project}/locations/{location}/keyRings/{keyRing}/cryptoKeys/{key}`
+  string kms_key = 2 [(google.api.field_behavior) = REQUIRED];
+}
+
+// DLP resources used for redaction while ingesting conversations.
+// DLP settings are applied to conversations ingested from the
+// `UploadConversation` and `IngestConversations` endpoints, including
+// conversation coming from CCAI Platform. They are not applied to conversations
+// ingested from the `CreateConversation` endpoint or the Dialogflow / Agent
+// Assist runtime integrations. When using Dialogflow / Agent Assist runtime
+// integrations, redaction should be performed in Dialogflow / Agent Assist.
+message RedactionConfig {
+  // The fully-qualified DLP deidentify template resource name.
+  // Format:
+  // `projects/{project}/deidentifyTemplates/{template}`
+  string deidentify_template = 1;
+
+  // The fully-qualified DLP inspect template resource name.
+  // Format:
+  // `projects/{project}/locations/{location}/inspectTemplates/{template}`
+  string inspect_template = 2;
+}
+
+// Speech-to-Text configuration.
+// Speech-to-Text settings are applied to conversations ingested from the
+// `UploadConversation` and `IngestConversations` endpoints, including
+// conversation coming from CCAI Platform. They are not applied to conversations
+// ingested from the `CreateConversation` endpoint.
+message SpeechConfig {
+  // The fully-qualified Speech Recognizer resource name.
+  // Format:
+  // `projects/{project_id}/locations/{location}/recognizer/{recognizer}`
+  string speech_recognizer = 1 [(google.api.resource_reference) = {
+    type: "speech.googleapis.com/Recognizer"
+  }];
 }
 
 // An annotation that was generated during the customer and agent interaction.
 message RuntimeAnnotation {
+  // Explicit input used for generating the answer
+  message UserInput {
+    // The source of the query.
+    enum QuerySource {
+      // Unknown query source.
+      QUERY_SOURCE_UNSPECIFIED = 0;
+
+      // The query is from agents.
+      AGENT_QUERY = 1;
+
+      // The query is a query from previous suggestions, e.g. from a preceding
+      // SuggestKnowledgeAssist response.
+      SUGGESTED_QUERY = 2;
+    }
+
+    // Query text. Article Search uses this to store the input query used
+    // to generate the search results.
+    string query = 1;
+
+    // The resource name of associated generator. Format:
+    // `projects/<Project ID>/locations/<Location ID>/generators/<Generator ID>`
+    string generator_name = 2;
+
+    // Query source for the answer.
+    QuerySource query_source = 3;
+  }
+
   // The data in the annotation.
   oneof data {
     // Agent Assist Article Suggestion data.
@@ -891,6 +1243,10 @@ message RuntimeAnnotation {
 
     // Dialogflow interaction data.
     DialogflowInteractionData dialogflow_interaction = 10;
+
+    // Conversation summarization suggestion data.
+    ConversationSummarizationSuggestionData
+        conversation_summarization_suggestion = 12;
   }
 
   // The unique identifier of the annotation.
@@ -909,6 +1265,9 @@ message RuntimeAnnotation {
 
   // The feedback that the customer has about the answer in `data`.
   AnswerFeedback answer_feedback = 5;
+
+  // Explicit input used for generating the answer
+  UserInput user_input = 16;
 }
 
 // The feedback that the customer has about a certain answer in the
@@ -957,9 +1316,9 @@ message ArticleSuggestionData {
   // that it originates from.
   map<string, string> metadata = 4;
 
-  // Name of the query record.
+  // The name of the answer record.
   // Format:
-  // projects/{project}/locations/{location}/queryRecords/{query_record}
+  // projects/{project}/locations/{location}/answerRecords/{answer_record}
   string query_record = 5;
 
   // The knowledge document that this answer was extracted from.
@@ -985,9 +1344,9 @@ message FaqAnswerData {
   // it originates from.
   map<string, string> metadata = 4;
 
-  // Name of the query record.
+  // The name of the answer record.
   // Format:
-  // projects/{project}/locations/{location}/queryRecords/{query_record}.
+  // projects/{project}/locations/{location}/answerRecords/{answer_record}
   string query_record = 5;
 
   // The knowledge document that this answer was extracted from.
@@ -1010,9 +1369,9 @@ message SmartReplyData {
   // which it originates.
   map<string, string> metadata = 3;
 
-  // Name of the query record.
+  // The name of the answer record.
   // Format:
-  // projects/{project}/locations/{location}/queryRecords/{query_record}
+  // projects/{project}/locations/{location}/answerRecords/{answer_record}
   string query_record = 4;
 }
 
@@ -1030,9 +1389,9 @@ message SmartComposeSuggestionData {
   // document from which it originates.
   map<string, string> metadata = 3;
 
-  // Name of the query record.
+  // The name of the answer record.
   // Format:
-  // projects/{project}/locations/{location}/queryRecords/{query_record}
+  // projects/{project}/locations/{location}/answerRecords/{answer_record}
   string query_record = 4;
 }
 
@@ -1045,6 +1404,34 @@ message DialogflowInteractionData {
   // The confidence of the match ranging from 0.0 (completely uncertain) to 1.0
   // (completely certain).
   float confidence = 2;
+}
+
+// Conversation summarization suggestion data.
+message ConversationSummarizationSuggestionData {
+  // The summarization content that is concatenated into one string.
+  string text = 1;
+
+  // The summarization content that is divided into sections. The key is the
+  // section's name and the value is the section's content. There is no
+  // specific format for the key or value.
+  map<string, string> text_sections = 5;
+
+  // The confidence score of the summarization.
+  float confidence = 2;
+
+  // A map that contains metadata about the summarization and the document
+  // from which it originates.
+  map<string, string> metadata = 3;
+
+  // The name of the answer record.
+  // Format:
+  // projects/{project}/locations/{location}/answerRecords/{answer_record}
+  string answer_record = 4;
+
+  // The name of the model that generates this summary.
+  // Format:
+  // projects/{project}/locations/{location}/conversationModels/{conversation_model}
+  string conversation_model = 6;
 }
 
 // The call participant speaking for a given utterance.
@@ -1071,8 +1458,8 @@ message ConversationParticipant {
     // The name of the participant provided by Dialogflow. Format:
     // projects/{project}/locations/{location}/conversations/{conversation}/participants/{participant}
     string dialogflow_participant_name = 5 [(google.api.resource_reference) = {
-                                              type: "dialogflow.googleapis.com/Participant"
-                                            }];
+      type: "dialogflow.googleapis.com/Participant"
+    }];
 
     // A user-specified ID representing the participant.
     string user_id = 6;
@@ -1106,11 +1493,499 @@ message View {
   string display_name = 2;
 
   // Output only. The time at which this view was created.
-  google.protobuf.Timestamp create_time = 3 [(google.api.field_behavior) = OUTPUT_ONLY];
+  google.protobuf.Timestamp create_time = 3
+      [(google.api.field_behavior) = OUTPUT_ONLY];
 
   // Output only. The most recent time at which the view was updated.
-  google.protobuf.Timestamp update_time = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
+  google.protobuf.Timestamp update_time = 4
+      [(google.api.field_behavior) = OUTPUT_ONLY];
 
-  // String with specific view properties.
+  // String with specific view properties, must be non-empty.
   string value = 5;
+}
+
+// Selector of all available annotators and phrase matchers to run.
+message AnnotatorSelector {
+  // Configuration for summarization.
+  message SummarizationConfig {
+    // Summarization model to use, if `conversation_profile` is not used.
+    enum SummarizationModel {
+      // Unspecified summarization model.
+      SUMMARIZATION_MODEL_UNSPECIFIED = 0;
+
+      // The CCAI baseline model.
+      BASELINE_MODEL = 1;
+
+      // The CCAI baseline model, V2.0.
+      BASELINE_MODEL_V2_0 = 2;
+    }
+
+    // Summarization must use either a preexisting conversation profile or one
+    // of the supported default models.
+    oneof model_source {
+      // Resource name of the Dialogflow conversation profile.
+      // Format:
+      // projects/{project}/locations/{location}/conversationProfiles/{conversation_profile}
+      string conversation_profile = 1 [(google.api.resource_reference) = {
+        type: "dialogflow.googleapis.com/ConversationProfile"
+      }];
+
+      // Default summarization model to be used.
+      SummarizationModel summarization_model = 2;
+    }
+  }
+
+  // Configuration for the QA feature.
+  message QaConfig {
+    // Container for a list of scorecards.
+    message ScorecardList {
+      // List of QaScorecardRevisions.
+      repeated string qa_scorecard_revisions = 1
+          [(google.api.resource_reference) = {
+            type: "contactcenterinsights.googleapis.com/QaScorecardRevision"
+          }];
+    }
+
+    // Which scorecards should be scored.
+    oneof scorecard_source {
+      // A manual list of scorecards to score.
+      ScorecardList scorecard_list = 1;
+    }
+  }
+
+  // Whether to run the interruption annotator.
+  bool run_interruption_annotator = 1;
+
+  // Whether to run the silence annotator.
+  bool run_silence_annotator = 2;
+
+  // Whether to run the active phrase matcher annotator(s).
+  bool run_phrase_matcher_annotator = 3;
+
+  // The list of phrase matchers to run. If not provided, all active phrase
+  // matchers will be used. If inactive phrase matchers are provided, they will
+  // not be used. Phrase matchers will be run only if
+  // run_phrase_matcher_annotator is set to true. Format:
+  // projects/{project}/locations/{location}/phraseMatchers/{phrase_matcher}
+  repeated string phrase_matchers = 4 [(google.api.resource_reference) = {
+    type: "contactcenterinsights.googleapis.com/PhraseMatcher"
+  }];
+
+  // Whether to run the sentiment annotator.
+  bool run_sentiment_annotator = 5;
+
+  // Whether to run the entity annotator.
+  bool run_entity_annotator = 6;
+
+  // Whether to run the intent annotator.
+  bool run_intent_annotator = 7;
+
+  // Whether to run the issue model annotator. A model should have already been
+  // deployed for this to take effect.
+  bool run_issue_model_annotator = 8;
+
+  // The issue model to run. If not provided, the most recently deployed topic
+  // model will be used. The provided issue model will only be used for
+  // inference if the issue model is deployed and if run_issue_model_annotator
+  // is set to true. If more than one issue model is provided, only the first
+  // provided issue model will be used for inference.
+  repeated string issue_models = 10 [(google.api.resource_reference) = {
+    type: "contactcenterinsights.googleapis.com/IssueModel"
+  }];
+
+  // Whether to run the summarization annotator.
+  bool run_summarization_annotator = 9;
+
+  // Configuration for the summarization annotator.
+  SummarizationConfig summarization_config = 11;
+
+  // Whether to run the QA annotator.
+  bool run_qa_annotator = 12;
+
+  // Configuration for the QA annotator.
+  QaConfig qa_config = 13;
+}
+
+// A single question to be scored by the Insights QA feature.
+message QaQuestion {
+  option (google.api.resource) = {
+    type: "contactcenterinsights.googleapis.com/QaQuestion"
+    pattern: "projects/{project}/locations/{location}/qaScorecards/{qa_scorecard}/revisions/{revision}/qaQuestions/{qa_question}"
+    plural: "qaQuestions"
+    singular: "qaQuestion"
+  };
+
+  // Message representing a possible answer to the question.
+  message AnswerChoice {
+    // The answer value may be one of a few different types.
+    oneof value {
+      // String value.
+      string str_value = 2;
+
+      // Numerical value.
+      double num_value = 3;
+
+      // Boolean value.
+      bool bool_value = 4;
+
+      // A value of "Not Applicable (N/A)". If provided, this field may only
+      // be set to `true`. If a question receives this answer, it will be
+      // excluded from any score calculations.
+      bool na_value = 5;
+    }
+
+    // A short string used as an identifier.
+    string key = 1;
+
+    // Numerical score of the answer, used for generating the overall score of
+    // a QaScorecardResult. If the answer uses na_value, this field is unused.
+    optional double score = 6;
+  }
+
+  // A wrapper representing metrics calculated against a test-set on a LLM that
+  // was fine tuned for this question.
+  message Metrics {
+    // Output only. Accuracy of the model. Measures the percentage of correct
+    // answers the model gave on the test set.
+    double accuracy = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
+  }
+
+  // Metadata about the tuning operation for the question. Will only be set if a
+  // scorecard containing this question has been tuned.
+  message TuningMetadata {
+    // Total number of valid labels provided for the question at the time of
+    // tuining.
+    int64 total_valid_label_count = 1;
+
+    // A list of any applicable data validation warnings about the question's
+    // feedback labels.
+    repeated DatasetValidationWarning dataset_validation_warnings = 2;
+
+    // Error status of the tuning operation for the question. Will only be set
+    // if the tuning operation failed.
+    string tuning_error = 3;
+  }
+
+  // Identifier. The resource name of the question.
+  // Format:
+  // projects/{project}/locations/{location}/qaScorecards/{qa_scorecard}/revisions/{revision}/qaQuestions/{qa_question}
+  string name = 1 [(google.api.field_behavior) = IDENTIFIER];
+
+  // Short, descriptive string, used in the UI where it's not practical
+  // to display the full question body. E.g., "Greeting".
+  string abbreviation = 2;
+
+  // Output only. The time at which this question was created.
+  google.protobuf.Timestamp create_time = 3
+      [(google.api.field_behavior) = OUTPUT_ONLY];
+
+  // Output only. The most recent time at which the question was updated.
+  google.protobuf.Timestamp update_time = 4
+      [(google.api.field_behavior) = OUTPUT_ONLY];
+
+  // Question text. E.g., "Did the agent greet the customer?"
+  string question_body = 5;
+
+  // Instructions describing how to determine the answer.
+  string answer_instructions = 9;
+
+  // A list of valid answers to the question, which the LLM must choose from.
+  repeated AnswerChoice answer_choices = 6;
+
+  // User-defined list of arbitrary tags for the question. Used for
+  // grouping/organization and for weighting the score of each question.
+  repeated string tags = 7;
+
+  // Defines the order of the question within its parent scorecard revision.
+  int32 order = 8;
+
+  // Metrics of the underlying tuned LLM over a holdout/test set while fine
+  // tuning the underlying LLM for the given question. This field will only be
+  // populated if and only if the question is part of a scorecard revision that
+  // has been tuned.
+  Metrics metrics = 10;
+
+  // Metadata about the tuning operation for the question.This field will only
+  // be populated if and only if the question is part of a scorecard revision
+  // that has been tuned.
+  TuningMetadata tuning_metadata = 11;
+}
+
+// A QaScorecard represents a collection of questions to be scored during
+// analysis.
+message QaScorecard {
+  option (google.api.resource) = {
+    type: "contactcenterinsights.googleapis.com/QaScorecard"
+    pattern: "projects/{project}/locations/{location}/qaScorecards/{qa_scorecard}"
+    plural: "qaScorecards"
+    singular: "qaScorecard"
+  };
+
+  // Identifier. The scorecard name.
+  // Format:
+  // projects/{project}/locations/{location}/qaScorecards/{qa_scorecard}
+  string name = 1 [(google.api.field_behavior) = IDENTIFIER];
+
+  // The user-specified display name of the scorecard.
+  string display_name = 7;
+
+  // A text description explaining the intent of the scorecard.
+  string description = 2;
+
+  // Output only. The time at which this scorecard was created.
+  google.protobuf.Timestamp create_time = 3
+      [(google.api.field_behavior) = OUTPUT_ONLY];
+
+  // Output only. The most recent time at which the scorecard was updated.
+  google.protobuf.Timestamp update_time = 4
+      [(google.api.field_behavior) = OUTPUT_ONLY];
+}
+
+// A revision of a QaScorecard.
+//
+// Modifying published scorecard fields would invalidate existing scorecard
+// results — the questions may have changed, or the score weighting will make
+// existing scores impossible to understand. So changes must create a new
+// revision, rather than modifying the existing resource.
+message QaScorecardRevision {
+  option (google.api.resource) = {
+    type: "contactcenterinsights.googleapis.com/QaScorecardRevision"
+    pattern: "projects/{project}/locations/{location}/qaScorecards/{qa_scorecard}/revisions/{revision}"
+    plural: "qaScorecardRevisions"
+    singular: "qaScorecardRevision"
+  };
+
+  // Enum representing the set of states a scorecard revision may be in.
+  enum State {
+    // Unspecified.
+    STATE_UNSPECIFIED = 0;
+
+    // The scorecard revision can be edited.
+    EDITABLE = 12;
+
+    // Scorecard model training is in progress.
+    TRAINING = 2;
+
+    // Scorecard revision model training failed.
+    TRAINING_FAILED = 9;
+
+    // The revision can be used in analysis.
+    READY = 11;
+
+    // Scorecard is being deleted.
+    DELETING = 7;
+
+    // Scorecard model training was explicitly cancelled by the user.
+    TRAINING_CANCELLED = 14;
+  }
+
+  // Identifier. The name of the scorecard revision.
+  // Format:
+  // projects/{project}/locations/{location}/qaScorecards/{qa_scorecard}/revisions/{revision}
+  string name = 1 [(google.api.field_behavior) = IDENTIFIER];
+
+  // The snapshot of the scorecard at the time of this revision's creation.
+  QaScorecard snapshot = 2;
+
+  // Output only. The timestamp that the revision was created.
+  google.protobuf.Timestamp create_time = 3
+      [(google.api.field_behavior) = OUTPUT_ONLY];
+
+  // Output only. Alternative IDs for this revision of the scorecard, e.g.,
+  // `latest`.
+  repeated string alternate_ids = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
+
+  // Output only. State of the scorecard revision, indicating whether it's ready
+  // to be used in analysis.
+  State state = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
+}
+
+// An answer to a QaQuestion.
+message QaAnswer {
+  // Message for holding the value of a
+  // [QaAnswer][google.cloud.contactcenterinsights.v1.QaAnswer].
+  // [QaQuestion.AnswerChoice][google.cloud.contactcenterinsights.v1.QaQuestion.AnswerChoice]
+  // defines the possible answer values for a question.
+  message AnswerValue {
+    // The answer value may be one of a few different types.
+    oneof value {
+      // String value.
+      string str_value = 2;
+
+      // Numerical value.
+      double num_value = 3;
+
+      // Boolean value.
+      bool bool_value = 4;
+
+      // A value of "Not Applicable (N/A)". Should only ever be `true`.
+      bool na_value = 5;
+    }
+
+    // A short string used as an identifier. Matches the value used in
+    // QaQuestion.AnswerChoice.key.
+    string key = 1;
+
+    // Output only. Numerical score of the answer.
+    optional double score = 6 [(google.api.field_behavior) = OUTPUT_ONLY];
+
+    // Output only. The maximum potential score of the question.
+    optional double potential_score = 7
+        [(google.api.field_behavior) = OUTPUT_ONLY];
+
+    // Output only. Normalized score of the questions. Calculated as score /
+    // potential_score.
+    optional double normalized_score = 8
+        [(google.api.field_behavior) = OUTPUT_ONLY];
+  }
+
+  // A question may have multiple answers from varying sources, one of which
+  // becomes the "main" answer above. AnswerSource represents each individual
+  // answer.
+  message AnswerSource {
+    // What created the answer.
+    enum SourceType {
+      // Source type is unspecified.
+      SOURCE_TYPE_UNSPECIFIED = 0;
+
+      // Answer was system-generated; created during an Insights analysis.
+      SYSTEM_GENERATED = 1;
+
+      // Answer was created by a human via manual edit.
+      MANUAL_EDIT = 2;
+    }
+
+    // What created the answer.
+    SourceType source_type = 1;
+
+    // The answer value from this source.
+    AnswerValue answer_value = 2;
+  }
+
+  // The QaQuestion answered by this answer.
+  string qa_question = 7 [(google.api.resource_reference) = {
+    type: "contactcenterinsights.googleapis.com/QaQuestion"
+  }];
+
+  // The conversation the answer applies to.
+  string conversation = 2 [(google.api.resource_reference) = {
+    type: "contactcenterinsights.googleapis.com/Conversation"
+  }];
+
+  // Question text. E.g., "Did the agent greet the customer?"
+  string question_body = 6;
+
+  // The main answer value, incorporating any manual edits if they exist.
+  AnswerValue answer_value = 3;
+
+  // User-defined list of arbitrary tags. Matches the value from
+  // QaScorecard.ScorecardQuestion.tags. Used for grouping/organization and
+  // for weighting the score of each answer.
+  repeated string tags = 5;
+
+  // List of all individual answers given to the question.
+  repeated AnswerSource answer_sources = 8;
+}
+
+// The results of scoring a single conversation against a QaScorecard. Contains
+// a collection of QaAnswers and aggregate score.
+message QaScorecardResult {
+  option (google.api.resource) = {
+    type: "contactcenterinsights.googleapis.com/QaScorecardResult"
+    pattern: "projects/{project}/locations/{location}/qaScorecardResults/{qa_scorecard_result}"
+    plural: "qaScorecardResults"
+    singular: "qaScorecardResult"
+  };
+
+  // Tags and their corresponding results.
+  message QaTagResult {
+    // The tag the score applies to.
+    string tag = 1;
+
+    // The score the tag applies to.
+    optional double score = 2;
+
+    // The potential score the tag applies to.
+    optional double potential_score = 3;
+
+    // The normalized score the tag applies to.
+    optional double normalized_score = 4;
+  }
+
+  // A scorecard result may have multiple sets of scores from varying sources,
+  // one of which becomes the "main" answer above. A ScoreSource represents
+  // each individual set of scores.
+  message ScoreSource {
+    // What created the score.
+    enum SourceType {
+      // Source type is unspecified.
+      SOURCE_TYPE_UNSPECIFIED = 0;
+
+      // Score is derived only from system-generated answers.
+      SYSTEM_GENERATED_ONLY = 1;
+
+      // Score is derived from both system-generated answers, and includes
+      // any manual edits if they exist.
+      INCLUDES_MANUAL_EDITS = 2;
+    }
+
+    // What created the score.
+    SourceType source_type = 1;
+
+    // The overall numerical score of the result.
+    optional double score = 2;
+
+    // The maximum potential overall score of the scorecard. Any questions
+    // answered using `na_value` are excluded from this calculation.
+    optional double potential_score = 3;
+
+    // The normalized score, which is the score divided by the potential score.
+    optional double normalized_score = 4;
+
+    // Collection of tags and their scores.
+    repeated QaTagResult qa_tag_results = 5;
+  }
+
+  // Identifier. The name of the scorecard result.
+  // Format:
+  // projects/{project}/locations/{location}/qaScorecardResults/{qa_scorecard_result}
+  string name = 1 [(google.api.field_behavior) = IDENTIFIER];
+
+  // The QaScorecardRevision scored by this result.
+  string qa_scorecard_revision = 2 [(google.api.resource_reference) = {
+    type: "contactcenterinsights.googleapis.com/QaScorecardRevision"
+  }];
+
+  // The conversation scored by this result.
+  string conversation = 3 [(google.api.resource_reference) = {
+    type: "contactcenterinsights.googleapis.com/Conversation"
+  }];
+
+  // Output only. The timestamp that the revision was created.
+  google.protobuf.Timestamp create_time = 4
+      [(google.api.field_behavior) = OUTPUT_ONLY];
+
+  // ID of the agent that handled the conversation.
+  string agent_id = 5;
+
+  // Set of QaAnswers represented in the result.
+  repeated QaAnswer qa_answers = 6;
+
+  // The overall numerical score of the result, incorporating any manual edits
+  // if they exist.
+  optional double score = 7;
+
+  // The maximum potential overall score of the scorecard. Any questions
+  // answered using `na_value` are excluded from this calculation.
+  optional double potential_score = 8;
+
+  // The normalized score, which is the score divided by the potential score.
+  // Any manual edits are included if they exist.
+  optional double normalized_score = 9;
+
+  // Collection of tags and their scores.
+  repeated QaTagResult qa_tag_results = 10;
+
+  // List of all individual score sets.
+  repeated ScoreSource score_sources = 11;
 }

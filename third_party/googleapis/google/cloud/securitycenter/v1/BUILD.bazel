@@ -9,77 +9,88 @@
 #    * extra_protoc_file_parameters
 # The complete list of preserved parameters can be found in the source code.
 
-##############################################################################
-# Common
-##############################################################################
-load("@rules_proto//proto:defs.bzl", "proto_library")
-load(
-    "@com_google_googleapis_imports//:imports.bzl",
-    "cc_grpc_library",
-    "cc_proto_library",
-    "csharp_gapic_assembly_pkg",
-    "csharp_gapic_library",
-    "csharp_grpc_library",
-    "csharp_proto_library",
-    "go_gapic_assembly_pkg",
-    "go_gapic_library",
-    "go_proto_library",
-    "go_test",
-    "java_gapic_assembly_gradle_pkg",
-    "java_gapic_library",
-    "java_gapic_test",
-    "java_grpc_library",
-    "java_proto_library",
-    "nodejs_gapic_assembly_pkg",
-    "nodejs_gapic_library",
-    "php_gapic_assembly_pkg",
-    "php_gapic_library",
-    "php_grpc_library",
-    "php_proto_library",
-    "proto_library_with_info",
-    "py_gapic_assembly_pkg",
-    "py_gapic_library",
-    "ruby_cloud_gapic_library",
-    "ruby_gapic_assembly_pkg",
-    "ruby_grpc_library",
-    "ruby_proto_library",
-)
+# buildifier: disable=load-on-top
 
 # This is an API workspace, having public visibility by default makes perfect sense.
 package(default_visibility = ["//visibility:public"])
+
+##############################################################################
+# Common
+##############################################################################
+# buildifier: disable=same-origin-load
+load("@com_google_googleapis_imports//:imports.bzl", "proto_library_with_info")
+load("@rules_proto//proto:defs.bzl", "proto_library")
 
 proto_library(
     name = "securitycenter_proto",
     srcs = [
         "access.proto",
+        "application.proto",
         "asset.proto",
+        "attack_exposure.proto",
+        "attack_path.proto",
+        "backup_disaster_recovery.proto",
         "bigquery_export.proto",
+        "chokepoint.proto",
+        "cloud_armor.proto",
+        "cloud_dlp_data_profile.proto",
+        "cloud_dlp_inspection.proto",
+        "compliance.proto",
         "connection.proto",
+        "contact_details.proto",
+        "container.proto",
+        "database.proto",
+        "effective_event_threat_detection_custom_module.proto",
+        "effective_security_health_analytics_custom_module.proto",
+        "event_threat_detection_custom_module.proto",
+        "event_threat_detection_custom_module_validation_errors.proto",
+        "exfiltration.proto",
+        "external_exposure.proto",
         "external_system.proto",
+        "file.proto",
         "finding.proto",
         "folder.proto",
+        "group_membership.proto",
         "iam_binding.proto",
         "indicator.proto",
+        "kernel_rootkit.proto",
+        "kubernetes.proto",
+        "label.proto",
+        "load_balancer.proto",
+        "log_entry.proto",
         "mitre_attack.proto",
         "mute_config.proto",
+        "notebook.proto",
         "notification_config.proto",
         "notification_message.proto",
+        "org_policy.proto",
         "organization_settings.proto",
+        "process.proto",
         "resource.proto",
+        "resource_value_config.proto",
         "run_asset_discovery_response.proto",
+        "security_health_analytics_custom_config.proto",
+        "security_health_analytics_custom_module.proto",
         "security_marks.proto",
+        "security_posture.proto",
         "securitycenter_service.proto",
+        "simulation.proto",
         "source.proto",
+        "toxic_combination.proto",
+        "valued_resource.proto",
         "vulnerability.proto",
     ],
     deps = [
         "//google/api:annotations_proto",
         "//google/api:client_proto",
         "//google/api:field_behavior_proto",
+        "//google/api:field_info_proto",
         "//google/api:resource_proto",
         "//google/iam/v1:iam_policy_proto",
         "//google/iam/v1:policy_proto",
         "//google/longrunning:operations_proto",
+        "//google/rpc:status_proto",
+        "//google/type:expr_proto",
         "@com_google_protobuf//:duration_proto",
         "@com_google_protobuf//:empty_proto",
         "@com_google_protobuf//:field_mask_proto",
@@ -94,6 +105,19 @@ proto_library_with_info(
         ":securitycenter_proto",
         "//google/cloud:common_resources_proto",
     ],
+)
+
+##############################################################################
+# Java
+##############################################################################
+# buildifier: disable=same-origin-load
+load(
+    "@com_google_googleapis_imports//:imports.bzl",
+    "java_gapic_assembly_gradle_pkg",
+    "java_gapic_library",
+    "java_gapic_test",
+    "java_grpc_library",
+    "java_proto_library",
 )
 
 java_proto_library(
@@ -112,11 +136,13 @@ java_gapic_library(
     srcs = [":securitycenter_proto_with_info"],
     gapic_yaml = None,
     grpc_service_config = "securitycenter_grpc_service_config.json",
+    rest_numeric_enums = True,
     service_yaml = "securitycenter_v1.yaml",
     test_deps = [
         ":securitycenter_java_grpc",
         "//google/iam/v1:iam_java_grpc",
     ],
+    transport = "grpc+rest",
     deps = [
         ":securitycenter_java_proto",
         "//google/api:api_java_proto",
@@ -127,6 +153,7 @@ java_gapic_library(
 java_gapic_test(
     name = "securitycenter_java_gapic_test_suite",
     test_classes = [
+        "com.google.cloud.securitycenter.v1.SecurityCenterClientHttpJsonTest",
         "com.google.cloud.securitycenter.v1.SecurityCenterClientTest",
     ],
     runtime_deps = [":securitycenter_java_gapic_test"],
@@ -135,6 +162,8 @@ java_gapic_test(
 # Open Source Packages
 java_gapic_assembly_gradle_pkg(
     name = "google-cloud-securitycenter-v1-java",
+    include_samples = True,
+    transport = "grpc+rest",
     deps = [
         ":securitycenter_java_gapic",
         ":securitycenter_java_grpc",
@@ -143,15 +172,27 @@ java_gapic_assembly_gradle_pkg(
     ],
 )
 
-go_proto_library(
+##############################################################################
+# Go
+##############################################################################
+# buildifier: disable=same-origin-load
+load(
+    "@com_google_googleapis_imports//:imports.bzl",
+    "go_gapic_assembly_pkg",
+    "go_gapic_library",
+    "go_grpc_library",
+)
+
+go_grpc_library(
     name = "securitycenter_go_proto",
-    compilers = ["@io_bazel_rules_go//proto:go_grpc"],
-    importpath = "google.golang.org/genproto/googleapis/cloud/securitycenter/v1",
+    importpath = "cloud.google.com/go/securitycenter/apiv1/securitycenterpb",
     protos = [":securitycenter_proto"],
     deps = [
         "//google/api:annotations_go_proto",
         "//google/iam/v1:iam_go_proto",
         "//google/longrunning:longrunning_go_proto",
+        "//google/rpc:status_go_proto",
+        "//google/type:expr_go_proto",
     ],
 )
 
@@ -161,23 +202,19 @@ go_gapic_library(
     grpc_service_config = "securitycenter_grpc_service_config.json",
     importpath = "cloud.google.com/go/securitycenter/apiv1;securitycenter",
     metadata = True,
+    release_level = "ga",
+    rest_numeric_enums = True,
     service_yaml = "securitycenter_v1.yaml",
+    transport = "grpc+rest",
     deps = [
         ":securitycenter_go_proto",
         "//google/iam/v1:iam_go_proto",
         "//google/longrunning:longrunning_go_proto",
-        "@com_google_cloud_go//longrunning:go_default_library",
-        "@com_google_cloud_go//longrunning/autogen:go_default_library",
+        "@com_google_cloud_go_longrunning//:go_default_library",
+        "@com_google_cloud_go_longrunning//autogen:go_default_library",
         "@io_bazel_rules_go//proto/wkt:duration_go_proto",
         "@io_bazel_rules_go//proto/wkt:struct_go_proto",
     ],
-)
-
-go_test(
-    name = "securitycenter_go_gapic_test",
-    srcs = [":securitycenter_go_gapic_srcjar_test"],
-    embed = [":securitycenter_go_gapic"],
-    importpath = "cloud.google.com/go/securitycenter/apiv1",
 )
 
 # Open Source Packages
@@ -186,15 +223,43 @@ go_gapic_assembly_pkg(
     deps = [
         ":securitycenter_go_gapic",
         ":securitycenter_go_gapic_srcjar-metadata.srcjar",
+        ":securitycenter_go_gapic_srcjar-snippets.srcjar",
         ":securitycenter_go_gapic_srcjar-test.srcjar",
         ":securitycenter_go_proto",
     ],
+)
+
+##############################################################################
+# Python
+##############################################################################
+# buildifier: disable=same-origin-load
+load(
+    "@com_google_googleapis_imports//:imports.bzl",
+    "py_gapic_assembly_pkg",
+    "py_gapic_library",
+    "py_test",
 )
 
 py_gapic_library(
     name = "securitycenter_py_gapic",
     srcs = [":securitycenter_proto"],
     grpc_service_config = "securitycenter_grpc_service_config.json",
+    rest_numeric_enums = True,
+    service_yaml = "securitycenter_v1.yaml",
+    transport = "grpc+rest",
+    deps = [
+        "//google/iam/v1:iam_policy_py_proto",
+    ],
+)
+
+py_test(
+    name = "securitycenter_py_gapic_test",
+    srcs = [
+        "securitycenter_py_gapic_pytest.py",
+        "securitycenter_py_gapic_test.py",
+    ],
+    legacy_create_init = False,
+    deps = [":securitycenter_py_gapic"],
 )
 
 # Open Source Packages
@@ -205,24 +270,31 @@ py_gapic_assembly_pkg(
     ],
 )
 
+##############################################################################
+# PHP
+##############################################################################
+# buildifier: disable=same-origin-load
+load(
+    "@com_google_googleapis_imports//:imports.bzl",
+    "php_gapic_assembly_pkg",
+    "php_gapic_library",
+    "php_proto_library",
+)
+
 php_proto_library(
     name = "securitycenter_php_proto",
     deps = [":securitycenter_proto"],
-)
-
-php_grpc_library(
-    name = "securitycenter_php_grpc",
-    srcs = [":securitycenter_proto"],
-    deps = [":securitycenter_php_proto"],
 )
 
 php_gapic_library(
     name = "securitycenter_php_gapic",
     srcs = [":securitycenter_proto_with_info"],
     grpc_service_config = "securitycenter_grpc_service_config.json",
+    migration_mode = "NEW_SURFACE_ONLY",
+    rest_numeric_enums = True,
     service_yaml = "securitycenter_v1.yaml",
+    transport = "grpc+rest",
     deps = [
-        ":securitycenter_php_grpc",
         ":securitycenter_php_proto",
     ],
 )
@@ -232,9 +304,18 @@ php_gapic_assembly_pkg(
     name = "google-cloud-securitycenter-v1-php",
     deps = [
         ":securitycenter_php_gapic",
-        ":securitycenter_php_grpc",
         ":securitycenter_php_proto",
     ],
+)
+
+##############################################################################
+# Node.js
+##############################################################################
+# buildifier: disable=same-origin-load
+load(
+    "@com_google_googleapis_imports//:imports.bzl",
+    "nodejs_gapic_assembly_pkg",
+    "nodejs_gapic_library",
 )
 
 nodejs_gapic_library(
@@ -244,7 +325,9 @@ nodejs_gapic_library(
     extra_protoc_parameters = ["metadata"],
     grpc_service_config = "securitycenter_grpc_service_config.json",
     package = "google.cloud.securitycenter.v1",
+    rest_numeric_enums = True,
     service_yaml = "securitycenter_v1.yaml",
+    transport = "grpc+rest",
     deps = [],
 )
 
@@ -254,6 +337,18 @@ nodejs_gapic_assembly_pkg(
         ":securitycenter_nodejs_gapic",
         ":securitycenter_proto",
     ],
+)
+
+##############################################################################
+# Ruby
+##############################################################################
+# buildifier: disable=same-origin-load
+load(
+    "@com_google_googleapis_imports//:imports.bzl",
+    "ruby_cloud_gapic_library",
+    "ruby_gapic_assembly_pkg",
+    "ruby_grpc_library",
+    "ruby_proto_library",
 )
 
 ruby_proto_library(
@@ -278,8 +373,11 @@ ruby_cloud_gapic_library(
         "ruby-cloud-product-url=https://cloud.google.com/security-command-center",
     ],
     grpc_service_config = "securitycenter_grpc_service_config.json",
+    rest_numeric_enums = True,
     ruby_cloud_description = "Security Command Center API provides access to temporal views of assets and findings within an organization.",
     ruby_cloud_title = "Cloud Security Command Center V1",
+    service_yaml = "securitycenter_v1.yaml",
+    transport = "grpc+rest",
     deps = [
         ":securitycenter_ruby_grpc",
         ":securitycenter_ruby_proto",
@@ -296,8 +394,21 @@ ruby_gapic_assembly_pkg(
     ],
 )
 
+##############################################################################
+# C#
+##############################################################################
+# buildifier: disable=same-origin-load
+load(
+    "@com_google_googleapis_imports//:imports.bzl",
+    "csharp_gapic_assembly_pkg",
+    "csharp_gapic_library",
+    "csharp_grpc_library",
+    "csharp_proto_library",
+)
+
 csharp_proto_library(
     name = "securitycenter_csharp_proto",
+    extra_opts = [],
     deps = [":securitycenter_proto"],
 )
 
@@ -312,7 +423,9 @@ csharp_gapic_library(
     srcs = [":securitycenter_proto_with_info"],
     common_resources_config = "@gax_dotnet//:Google.Api.Gax/ResourceNames/CommonResourcesConfig.json",
     grpc_service_config = "securitycenter_grpc_service_config.json",
+    rest_numeric_enums = True,
     service_yaml = "securitycenter_v1.yaml",
+    transport = "grpc+rest",
     deps = [
         ":securitycenter_csharp_grpc",
         ":securitycenter_csharp_proto",
@@ -327,6 +440,16 @@ csharp_gapic_assembly_pkg(
         ":securitycenter_csharp_grpc",
         ":securitycenter_csharp_proto",
     ],
+)
+
+##############################################################################
+# C++
+##############################################################################
+# buildifier: disable=same-origin-load
+load(
+    "@com_google_googleapis_imports//:imports.bzl",
+    "cc_grpc_library",
+    "cc_proto_library",
 )
 
 cc_proto_library(

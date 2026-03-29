@@ -4,9 +4,14 @@ name: cloudkms.googleapis.com
 title: Cloud Key Management Service (KMS) API
 
 apis:
+- name: google.cloud.kms.v1.Autokey
+- name: google.cloud.kms.v1.AutokeyAdmin
 - name: google.cloud.kms.v1.EkmService
+- name: google.cloud.kms.v1.HsmManagement
 - name: google.cloud.kms.v1.KeyManagementService
+- name: google.cloud.location.Locations
 - name: google.iam.v1.IAMPolicy
+- name: google.longrunning.Operations
 
 types:
 - name: google.cloud.kms.v1.LocationMetadata
@@ -20,7 +25,15 @@ documentation:
     description: Gets information about a location.
 
   - selector: google.cloud.location.Locations.ListLocations
-    description: Lists information about the supported locations for this service.
+    description: |-
+      Lists information about the supported locations for this service.
+      This method can be called in two ways:
+
+      *   **List all public locations:** Use the path `GET /v1/locations`.
+      *   **List project-visible locations:** Use the path
+      `GET /v1/projects/{project_id}/locations`. This may include public
+      locations as well as private or other locations specifically visible
+      to the project.
 
   - selector: google.iam.v1.IAMPolicy.GetIamPolicy
     description: |-
@@ -56,6 +69,7 @@ http:
     additional_bindings:
     - get: '/v1/{resource=projects/*/locations/*/keyRings/*/cryptoKeys/*}:getIamPolicy'
     - get: '/v1/{resource=projects/*/locations/*/keyRings/*/importJobs/*}:getIamPolicy'
+    - get: '/v1/{resource=projects/*/locations/*/ekmConfig}:getIamPolicy'
     - get: '/v1/{resource=projects/*/locations/*/ekmConnections/*}:getIamPolicy'
   - selector: google.iam.v1.IAMPolicy.SetIamPolicy
     post: '/v1/{resource=projects/*/locations/*/keyRings/*}:setIamPolicy'
@@ -64,6 +78,8 @@ http:
     - post: '/v1/{resource=projects/*/locations/*/keyRings/*/cryptoKeys/*}:setIamPolicy'
       body: '*'
     - post: '/v1/{resource=projects/*/locations/*/keyRings/*/importJobs/*}:setIamPolicy'
+      body: '*'
+    - post: '/v1/{resource=projects/*/locations/*/ekmConfig}:setIamPolicy'
       body: '*'
     - post: '/v1/{resource=projects/*/locations/*/ekmConnections/*}:setIamPolicy'
       body: '*'
@@ -75,12 +91,31 @@ http:
       body: '*'
     - post: '/v1/{resource=projects/*/locations/*/keyRings/*/importJobs/*}:testIamPermissions'
       body: '*'
+    - post: '/v1/{resource=projects/*/locations/*/ekmConfig}:testIamPermissions'
+      body: '*'
     - post: '/v1/{resource=projects/*/locations/*/ekmConnections/*}:testIamPermissions'
       body: '*'
+  - selector: google.longrunning.Operations.GetOperation
+    get: '/v1/{name=projects/*/locations/*/operations/*}'
 
 authentication:
   rules:
+  - selector: 'google.cloud.kms.v1.Autokey.*'
+    oauth:
+      canonical_scopes: |-
+        https://www.googleapis.com/auth/cloud-platform,
+        https://www.googleapis.com/auth/cloudkms
+  - selector: 'google.cloud.kms.v1.AutokeyAdmin.*'
+    oauth:
+      canonical_scopes: |-
+        https://www.googleapis.com/auth/cloud-platform,
+        https://www.googleapis.com/auth/cloudkms
   - selector: 'google.cloud.kms.v1.EkmService.*'
+    oauth:
+      canonical_scopes: |-
+        https://www.googleapis.com/auth/cloud-platform,
+        https://www.googleapis.com/auth/cloudkms
+  - selector: 'google.cloud.kms.v1.HsmManagement.*'
     oauth:
       canonical_scopes: |-
         https://www.googleapis.com/auth/cloud-platform,
@@ -101,6 +136,11 @@ authentication:
         https://www.googleapis.com/auth/cloud-platform,
         https://www.googleapis.com/auth/cloudkms
   - selector: 'google.iam.v1.IAMPolicy.*'
+    oauth:
+      canonical_scopes: |-
+        https://www.googleapis.com/auth/cloud-platform,
+        https://www.googleapis.com/auth/cloudkms
+  - selector: google.longrunning.Operations.GetOperation
     oauth:
       canonical_scopes: |-
         https://www.googleapis.com/auth/cloud-platform,

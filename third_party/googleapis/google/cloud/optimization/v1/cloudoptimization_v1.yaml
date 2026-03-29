@@ -5,6 +5,7 @@ title: Cloud Optimization API
 
 apis:
 - name: google.cloud.optimization.v1.FleetRouting
+- name: google.longrunning.Operations
 
 types:
 - name: google.cloud.optimization.v1.AsyncModelMetadata
@@ -33,7 +34,16 @@ authentication:
     oauth:
       canonical_scopes: |-
         https://www.googleapis.com/auth/cloud-platform
-  - selector: 'google.longrunning.Operations.*'
+  - selector: google.longrunning.Operations.GetOperation
     oauth:
       canonical_scopes: |-
         https://www.googleapis.com/auth/cloud-platform
+
+publishing:
+  method_settings:
+  - selector: google.cloud.optimization.v1.FleetRouting.BatchOptimizeTours
+    long_running:
+      initial_poll_delay: 30s
+      poll_delay_multiplier: 1.5
+      max_poll_delay: 120s
+      total_poll_timeout: 3600s

@@ -11,6 +11,7 @@ load(
     "@com_google_googleapis_imports//:imports.bzl",
     "ruby_cloud_gapic_library",
     "ruby_gapic_assembly_pkg",
+    "nodejs_gapic_combined_pkg"
 )
 
 # Generates a Ruby wrapper client for datamigration.
@@ -22,7 +23,7 @@ ruby_cloud_gapic_library(
     extra_protoc_parameters = [
         "ruby-cloud-gem-name=google-cloud-cloud_dms",
         "ruby-cloud-env-prefix=DATABASE_MIGRATION",
-        "ruby-cloud-wrapper-of=v1:0.0",
+        "ruby-cloud-wrapper-of=v1:0.7",
         "ruby-cloud-product-url=https://cloud.google.com/database-migration/",
         "ruby-cloud-api-id=datamigration.googleapis.com",
         "ruby-cloud-api-shortname=datamigration",
@@ -30,6 +31,7 @@ ruby_cloud_gapic_library(
     ],
     ruby_cloud_description = "Database Migration Service makes it easier for you to migrate your data to Google Cloud. Database Migration Service helps you lift and shift your MySQL and PostgreSQL workloads into Cloud SQL. Database Migration Service streamlines networking workflow, manages the initial snapshot and ongoing replication, and provides a status of the migration operation.",
     ruby_cloud_title = "Cloud Database Migration Service",
+    transport = "grpc",
 )
 
 # Open Source package.
@@ -37,5 +39,15 @@ ruby_gapic_assembly_pkg(
     name = "google-cloud-clouddms-ruby",
     deps = [
         ":datamigration_ruby_wrapper",
+    ],
+)
+
+nodejs_gapic_combined_pkg(
+    name = "google-cloud-clouddms-nodejs",
+    default_version = "v1",
+    release_level = "stable",
+    templates_excludes = ["package.json", ".OwlBot.yaml"],
+    deps = [
+        "//google/cloud/clouddms/v1:clouddms-v1-nodejs"
     ],
 )

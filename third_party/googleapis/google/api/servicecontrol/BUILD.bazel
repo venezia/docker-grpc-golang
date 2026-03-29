@@ -11,6 +11,7 @@ load(
     "@com_google_googleapis_imports//:imports.bzl",
     "ruby_cloud_gapic_library",
     "ruby_gapic_assembly_pkg",
+    "nodejs_gapic_combined_pkg"
 )
 
 # Generates a Ruby wrapper client for servicecontrol.
@@ -22,13 +23,14 @@ ruby_cloud_gapic_library(
     extra_protoc_parameters = [
         "ruby-cloud-gem-name=google-cloud-service_control",
         "ruby-cloud-env-prefix=SERVICE_CONTROL",
-        "ruby-cloud-wrapper-of=v1:0.3",
+        "ruby-cloud-wrapper-of=v1:0.9",
         "ruby-cloud-product-url=https://cloud.google.com/service-infrastructure/docs/overview/",
         "ruby-cloud-api-id=servicecontrol.googleapis.com",
         "ruby-cloud-api-shortname=servicecontrol",
     ],
     ruby_cloud_description = "The Service Control API provides control plane functionality to managed services, such as logging, monitoring, and status checks.",
     ruby_cloud_title = "Service Control API",
+    transport = "grpc+rest",
 )
 
 # Open Source package.
@@ -36,5 +38,16 @@ ruby_gapic_assembly_pkg(
     name = "google-cloud-servicecontrol-ruby",
     deps = [
         ":servicecontrol_ruby_wrapper",
+    ],
+)
+
+nodejs_gapic_combined_pkg(
+    name = "google-api-servicecontrol-nodejs",
+    default_version = "v1",
+    release_level = "stable",
+    templates_excludes = ["package.json", ".OwlBot.yaml"],
+    deps = [
+        "//google/api/servicecontrol/v1:api-servicecontrol-v1-nodejs",
+        "//google/api/servicecontrol/v2:api-servicecontrol-v2-nodejs"
     ],
 )

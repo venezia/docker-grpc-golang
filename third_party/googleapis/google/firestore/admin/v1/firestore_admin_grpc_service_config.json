@@ -53,6 +53,40 @@
         {
           "service": "google.firestore.admin.v1.FirestoreAdmin",
           "method": "UpdateField"
+        },
+        {
+          "service": "google.firestore.admin.v1.FirestoreAdmin",
+          "method": "BulkDeleteDocuments"
+        }
+      ],
+      "timeout": "60s"
+    },
+    {
+      "name": [
+        {
+          "service": "google.firestore.admin.v1.FirestoreAdmin",
+          "method": "CreateDatabase"
+        },
+        {
+          "service": "google.firestore.admin.v1.FirestoreAdmin",
+          "method": "RestoreDatabase"
+        },
+        {
+          "service": "google.firestore.admin.v1.FirestoreAdmin",
+          "method": "CloneDatabase"
+        }
+      ],
+      "timeout": "120s"
+    },
+    {
+      "name": [
+        {
+          "service": "google.firestore.admin.v1.FirestoreAdmin",
+          "method": "QueryTopAggregatedInsightsData"
+        },
+        {
+          "service": "google.firestore.admin.v1.FirestoreAdmin",
+          "method": "QueryTopTimeseriesInsightsData"
         }
       ],
       "timeout": "60s"

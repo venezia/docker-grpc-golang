@@ -8,11 +8,12 @@ control:
 
 apis:
 - name: google.chromeos.moblab.v1beta1.BuildService
+- name: google.chromeos.moblab.v1beta1.TestService
 
 backend:
   rules:
   - selector: 'google.chromeos.moblab.v1beta1.BuildService.*'
-    deadline: 10.0
+    deadline: 30.0
 
 documentation:
   summary: |-

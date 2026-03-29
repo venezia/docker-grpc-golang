@@ -9,14 +9,17 @@
 #    * extra_protoc_file_parameters
 # The complete list of preserved parameters can be found in the source code.
 
+# buildifier: disable=load-on-top
+
 # This is an API workspace, having public visibility by default makes perfect sense.
 package(default_visibility = ["//visibility:public"])
 
 ##############################################################################
 # Common
 ##############################################################################
-load("@rules_proto//proto:defs.bzl", "proto_library")
+# buildifier: disable=same-origin-load
 load("@com_google_googleapis_imports//:imports.bzl", "proto_library_with_info")
+load("@rules_proto//proto:defs.bzl", "proto_library")
 
 proto_library(
     name = "cx_proto",
@@ -25,19 +28,33 @@ proto_library(
         "agent.proto",
         "audio_config.proto",
         "changelog.proto",
+        "code_block.proto",
+        "data_store_connection.proto",
         "deployment.proto",
         "entity_type.proto",
         "environment.proto",
+        "example.proto",
         "experiment.proto",
         "flow.proto",
         "fulfillment.proto",
+        "gcs.proto",
+        "generative_settings.proto",
+        "generator.proto",
+        "import_strategy.proto",
+        "inline.proto",
         "intent.proto",
         "page.proto",
+        "parameter_definition.proto",
+        "playbook.proto",
         "response_message.proto",
+        "safety_settings.proto",
         "security_settings.proto",
         "session.proto",
         "session_entity_type.proto",
         "test_case.proto",
+        "tool.proto",
+        "tool_call.proto",
+        "trace.proto",
         "transition_route_group.proto",
         "validation_message.proto",
         "version.proto",
@@ -64,12 +81,14 @@ proto_library_with_info(
     deps = [
         ":cx_proto",
         "//google/cloud:common_resources_proto",
+        "//google/cloud/location:location_proto",
     ],
 )
 
 ##############################################################################
 # Java
 ##############################################################################
+# buildifier: disable=same-origin-load
 load(
     "@com_google_googleapis_imports//:imports.bzl",
     "java_gapic_assembly_gradle_pkg",
@@ -95,34 +114,62 @@ java_gapic_library(
     srcs = [":cx_proto_with_info"],
     gapic_yaml = None,
     grpc_service_config = "dialogflow_grpc_service_config.json",
+    rest_numeric_enums = True,
     service_yaml = "dialogflow_v3.yaml",
     test_deps = [
         ":cx_java_grpc",
+        "//google/cloud/location:location_java_grpc",
     ],
+    transport = "grpc+rest",
     deps = [
         ":cx_java_proto",
         "//google/api:api_java_proto",
+        "//google/cloud/location:location_java_proto",
     ],
 )
 
 java_gapic_test(
     name = "cx_java_gapic_test_suite",
     test_classes = [
+        "com.google.cloud.dialogflow.cx.v3.AgentsClientHttpJsonTest",
         "com.google.cloud.dialogflow.cx.v3.AgentsClientTest",
+        "com.google.cloud.dialogflow.cx.v3.ChangelogsClientHttpJsonTest",
         "com.google.cloud.dialogflow.cx.v3.ChangelogsClientTest",
+        "com.google.cloud.dialogflow.cx.v3.DeploymentsClientHttpJsonTest",
         "com.google.cloud.dialogflow.cx.v3.DeploymentsClientTest",
+        "com.google.cloud.dialogflow.cx.v3.EntityTypesClientHttpJsonTest",
         "com.google.cloud.dialogflow.cx.v3.EntityTypesClientTest",
+        "com.google.cloud.dialogflow.cx.v3.EnvironmentsClientHttpJsonTest",
         "com.google.cloud.dialogflow.cx.v3.EnvironmentsClientTest",
+        "com.google.cloud.dialogflow.cx.v3.ExamplesClientHttpJsonTest",
+        "com.google.cloud.dialogflow.cx.v3.ExamplesClientTest",
+        "com.google.cloud.dialogflow.cx.v3.ExperimentsClientHttpJsonTest",
         "com.google.cloud.dialogflow.cx.v3.ExperimentsClientTest",
+        "com.google.cloud.dialogflow.cx.v3.FlowsClientHttpJsonTest",
         "com.google.cloud.dialogflow.cx.v3.FlowsClientTest",
+        "com.google.cloud.dialogflow.cx.v3.GeneratorsClientHttpJsonTest",
+        "com.google.cloud.dialogflow.cx.v3.GeneratorsClientTest",
+        "com.google.cloud.dialogflow.cx.v3.IntentsClientHttpJsonTest",
         "com.google.cloud.dialogflow.cx.v3.IntentsClientTest",
+        "com.google.cloud.dialogflow.cx.v3.PagesClientHttpJsonTest",
         "com.google.cloud.dialogflow.cx.v3.PagesClientTest",
+        "com.google.cloud.dialogflow.cx.v3.PlaybooksClientHttpJsonTest",
+        "com.google.cloud.dialogflow.cx.v3.PlaybooksClientTest",
+        "com.google.cloud.dialogflow.cx.v3.SecuritySettingsServiceClientHttpJsonTest",
         "com.google.cloud.dialogflow.cx.v3.SecuritySettingsServiceClientTest",
+        "com.google.cloud.dialogflow.cx.v3.SessionEntityTypesClientHttpJsonTest",
         "com.google.cloud.dialogflow.cx.v3.SessionEntityTypesClientTest",
+        "com.google.cloud.dialogflow.cx.v3.SessionsClientHttpJsonTest",
         "com.google.cloud.dialogflow.cx.v3.SessionsClientTest",
+        "com.google.cloud.dialogflow.cx.v3.TestCasesClientHttpJsonTest",
         "com.google.cloud.dialogflow.cx.v3.TestCasesClientTest",
+        "com.google.cloud.dialogflow.cx.v3.ToolsClientHttpJsonTest",
+        "com.google.cloud.dialogflow.cx.v3.ToolsClientTest",
+        "com.google.cloud.dialogflow.cx.v3.TransitionRouteGroupsClientHttpJsonTest",
         "com.google.cloud.dialogflow.cx.v3.TransitionRouteGroupsClientTest",
+        "com.google.cloud.dialogflow.cx.v3.VersionsClientHttpJsonTest",
         "com.google.cloud.dialogflow.cx.v3.VersionsClientTest",
+        "com.google.cloud.dialogflow.cx.v3.WebhooksClientHttpJsonTest",
         "com.google.cloud.dialogflow.cx.v3.WebhooksClientTest",
     ],
     runtime_deps = [":cx_java_gapic_test"],
@@ -131,6 +178,8 @@ java_gapic_test(
 # Open Source Packages
 java_gapic_assembly_gradle_pkg(
     name = "google-cloud-dialogflow-cx-v3-java",
+    include_samples = True,
+    transport = "grpc+rest",
     deps = [
         ":cx_java_gapic",
         ":cx_java_grpc",
@@ -142,18 +191,17 @@ java_gapic_assembly_gradle_pkg(
 ##############################################################################
 # Go
 ##############################################################################
+# buildifier: disable=same-origin-load
 load(
     "@com_google_googleapis_imports//:imports.bzl",
     "go_gapic_assembly_pkg",
     "go_gapic_library",
-    "go_proto_library",
-    "go_test",
+    "go_grpc_library",
 )
 
-go_proto_library(
+go_grpc_library(
     name = "cx_go_proto",
-    compilers = ["@io_bazel_rules_go//proto:go_grpc"],
-    importpath = "google.golang.org/genproto/googleapis/cloud/dialogflow/cx/v3",
+    importpath = "cloud.google.com/go/dialogflow/cx/apiv3/cxpb",
     protos = [":cx_proto"],
     deps = [
         "//google/api:annotations_go_proto",
@@ -169,22 +217,19 @@ go_gapic_library(
     grpc_service_config = "dialogflow_grpc_service_config.json",
     importpath = "cloud.google.com/go/dialogflow/cx/apiv3;cx",
     metadata = True,
+    release_level = "ga",
+    rest_numeric_enums = True,
     service_yaml = "dialogflow_v3.yaml",
+    transport = "grpc+rest",
     deps = [
         ":cx_go_proto",
+        "//google/cloud/location:location_go_proto",
         "//google/longrunning:longrunning_go_proto",
-        "@com_google_cloud_go//longrunning:go_default_library",
-        "@com_google_cloud_go//longrunning/autogen:go_default_library",
+        "@com_google_cloud_go_longrunning//:go_default_library",
+        "@com_google_cloud_go_longrunning//autogen:go_default_library",
         "@io_bazel_rules_go//proto/wkt:duration_go_proto",
         "@io_bazel_rules_go//proto/wkt:struct_go_proto",
     ],
-)
-
-go_test(
-    name = "cx_go_gapic_test",
-    srcs = [":cx_go_gapic_srcjar_test"],
-    embed = [":cx_go_gapic"],
-    importpath = "cloud.google.com/go/dialogflow/cx/apiv3",
 )
 
 # Open Source Packages
@@ -193,6 +238,7 @@ go_gapic_assembly_pkg(
     deps = [
         ":cx_go_gapic",
         ":cx_go_gapic_srcjar-metadata.srcjar",
+        ":cx_go_gapic_srcjar-snippets.srcjar",
         ":cx_go_gapic_srcjar-test.srcjar",
         ":cx_go_proto",
     ],
@@ -201,10 +247,12 @@ go_gapic_assembly_pkg(
 ##############################################################################
 # Python
 ##############################################################################
+# buildifier: disable=same-origin-load
 load(
     "@com_google_googleapis_imports//:imports.bzl",
     "py_gapic_assembly_pkg",
     "py_gapic_library",
+    "py_test",
 )
 
 py_gapic_library(
@@ -214,8 +262,23 @@ py_gapic_library(
     opt_args = [
         "python-gapic-name=dialogflowcx",
         "python-gapic-namespace=google.cloud",
+        "warehouse-package-name=google-cloud-dialogflow-cx",
     ],
+    rest_numeric_enums = True,
     service_yaml = "dialogflow_v3.yaml",
+    transport = "grpc+rest",
+    deps = [
+    ],
+)
+
+py_test(
+    name = "cx_py_gapic_test",
+    srcs = [
+        "cx_py_gapic_pytest.py",
+        "cx_py_gapic_test.py",
+    ],
+    legacy_create_init = False,
+    deps = [":cx_py_gapic"],
 )
 
 # Open Source Packages
@@ -229,11 +292,11 @@ py_gapic_assembly_pkg(
 ##############################################################################
 # PHP
 ##############################################################################
+# buildifier: disable=same-origin-load
 load(
     "@com_google_googleapis_imports//:imports.bzl",
     "php_gapic_assembly_pkg",
     "php_gapic_library",
-    "php_grpc_library",
     "php_proto_library",
 )
 
@@ -242,19 +305,15 @@ php_proto_library(
     deps = [":cx_proto"],
 )
 
-php_grpc_library(
-    name = "cx_php_grpc",
-    srcs = [":cx_proto"],
-    deps = [":cx_php_proto"],
-)
-
 php_gapic_library(
     name = "cx_php_gapic",
     srcs = [":cx_proto_with_info"],
     grpc_service_config = "dialogflow_grpc_service_config.json",
+    migration_mode = "NEW_SURFACE_ONLY",
+    rest_numeric_enums = True,
     service_yaml = "dialogflow_v3.yaml",
+    transport = "grpc+rest",
     deps = [
-        ":cx_php_grpc",
         ":cx_php_proto",
     ],
 )
@@ -264,7 +323,6 @@ php_gapic_assembly_pkg(
     name = "google-cloud-dialogflow-cx-v3-php",
     deps = [
         ":cx_php_gapic",
-        ":cx_php_grpc",
         ":cx_php_proto",
     ],
 )
@@ -272,6 +330,7 @@ php_gapic_assembly_pkg(
 ##############################################################################
 # Node.js
 ##############################################################################
+# buildifier: disable=same-origin-load
 load(
     "@com_google_googleapis_imports//:imports.bzl",
     "nodejs_gapic_assembly_pkg",
@@ -284,8 +343,11 @@ nodejs_gapic_library(
     src = ":cx_proto_with_info",
     extra_protoc_parameters = ["metadata"],
     grpc_service_config = "dialogflow_grpc_service_config.json",
+    mixins = "google.longrunning.Operations;google.cloud.location.Locations",
     package = "google.cloud.dialogflow.cx.v3",
+    rest_numeric_enums = True,
     service_yaml = "dialogflow_v3.yaml",
+    transport = "grpc+rest",
     deps = [],
 )
 
@@ -300,6 +362,7 @@ nodejs_gapic_assembly_pkg(
 ##############################################################################
 # Ruby
 ##############################################################################
+# buildifier: disable=same-origin-load
 load(
     "@com_google_googleapis_imports//:imports.bzl",
     "ruby_cloud_gapic_library",
@@ -331,8 +394,11 @@ ruby_cloud_gapic_library(
         "ruby-cloud-product-url=https://cloud.google.com/dialogflow",
     ],
     grpc_service_config = "dialogflow_grpc_service_config.json",
+    rest_numeric_enums = True,
     ruby_cloud_description = "Dialogflow is an end-to-end, build-once deploy-everywhere development suite for creating conversational interfaces for websites, mobile applications, popular messaging platforms, and IoT devices. You can use it to build interfaces (such as chatbots and conversational IVR) that enable natural and rich interactions between your users and your business. This client is for Dialogflow CX, providing an advanced agent type suitable for large or very complex agents.",
     ruby_cloud_title = "Dialogflow CX V3",
+    service_yaml = "dialogflow_v3.yaml",
+    transport = "grpc+rest",
     deps = [
         ":cx_ruby_grpc",
         ":cx_ruby_proto",
@@ -352,6 +418,7 @@ ruby_gapic_assembly_pkg(
 ##############################################################################
 # C#
 ##############################################################################
+# buildifier: disable=same-origin-load
 load(
     "@com_google_googleapis_imports//:imports.bzl",
     "csharp_gapic_assembly_pkg",
@@ -376,7 +443,9 @@ csharp_gapic_library(
     srcs = [":cx_proto_with_info"],
     common_resources_config = "@gax_dotnet//:Google.Api.Gax/ResourceNames/CommonResourcesConfig.json",
     grpc_service_config = "dialogflow_grpc_service_config.json",
+    rest_numeric_enums = True,
     service_yaml = "dialogflow_v3.yaml",
+    transport = "grpc+rest",
     deps = [
         ":cx_csharp_grpc",
         ":cx_csharp_proto",
@@ -396,6 +465,7 @@ csharp_gapic_assembly_pkg(
 ##############################################################################
 # C++
 ##############################################################################
+# buildifier: disable=same-origin-load
 load(
     "@com_google_googleapis_imports//:imports.bzl",
     "cc_grpc_library",

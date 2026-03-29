@@ -11,6 +11,7 @@ load(
     "@com_google_googleapis_imports//:imports.bzl",
     "ruby_cloud_gapic_library",
     "ruby_gapic_assembly_pkg",
+    "nodejs_gapic_combined_pkg"
 )
 
 # Generates a Ruby wrapper client for accessapproval.
@@ -22,13 +23,14 @@ ruby_cloud_gapic_library(
     extra_protoc_parameters = [
         "ruby-cloud-gem-name=google-cloud-access_approval",
         "ruby-cloud-env-prefix=ACCESS_APPROVAL",
-        "ruby-cloud-wrapper-of=v1:0.0",
+        "ruby-cloud-wrapper-of=v1:0.11",
         "ruby-cloud-product-url=https://cloud.google.com/access-approval/",
         "ruby-cloud-api-id=accessapproval.googleapis.com",
         "ruby-cloud-api-shortname=accessapproval",
     ],
     ruby_cloud_description = "An API for controlling access to data by Google personnel.",
     ruby_cloud_title = "Access Approval",
+    transport = "grpc+rest",
 )
 
 # Open Source package.
@@ -36,5 +38,15 @@ ruby_gapic_assembly_pkg(
     name = "google-cloud-accessapproval-ruby",
     deps = [
         ":accessapproval_ruby_wrapper",
+    ],
+)
+
+nodejs_gapic_combined_pkg(
+    name = "google-cloud-accessapproval-nodejs",
+    default_version = "v1",
+    release_level = "stable",
+    templates_excludes = ["package.json", ".OwlBot.yaml"],
+    deps = [
+        "//google/cloud/accessapproval/v1:accessapproval-v1-nodejs"
     ],
 )

@@ -1,4 +1,4 @@
-// Copyright 2022 Google LLC
+// Copyright 2026 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@ import "google/api/resource.proto";
 import "google/protobuf/field_mask.proto";
 
 option csharp_namespace = "Google.Cloud.ArtifactRegistry.V1";
-option go_package = "google.golang.org/genproto/googleapis/devtools/artifactregistry/v1;artifactregistry";
+option go_package = "cloud.google.com/go/artifactregistry/apiv1/artifactregistrypb;artifactregistrypb";
 option java_multiple_files = true;
 option java_outer_classname = "SettingsProto";
 option java_package = "com.google.devtools.artifactregistry.v1";
@@ -47,7 +47,13 @@ message ProjectSettings {
     REDIRECTION_FROM_GCR_IO_ENABLED = 2;
 
     // Redirection is enabled, and has been finalized so cannot be reverted.
-    REDIRECTION_FROM_GCR_IO_FINALIZED = 3;
+    REDIRECTION_FROM_GCR_IO_FINALIZED = 3 [deprecated = true];
+
+    // Redirection is enabled and missing images are copied from GCR
+    REDIRECTION_FROM_GCR_IO_ENABLED_AND_COPYING = 5;
+
+    // Redirection is partially enabled and missing images are copied from GCR
+    REDIRECTION_FROM_GCR_IO_PARTIAL_AND_COPYING = 6;
   }
 
   // The name of the project's settings.
@@ -61,6 +67,10 @@ message ProjectSettings {
 
   // The redirection state of the legacy repositories in this project.
   RedirectionState legacy_redirection_state = 2;
+
+  // The percentage of pull traffic to redirect from GCR to AR when using
+  // partial redirection.
+  int32 pull_percent = 3;
 }
 
 // Gets the redirection status for a project.

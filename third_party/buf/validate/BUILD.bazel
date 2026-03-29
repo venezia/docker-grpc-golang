@@ -1,4 +1,4 @@
-# Copyright 2023 Buf Technologies, Inc.
+# Copyright 2023-2026 Buf Technologies, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,8 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-load("@rules_proto//proto:defs.bzl", "proto_library")
+load("@com_google_protobuf//bazel:cc_proto_library.bzl", "cc_proto_library")
 load("@rules_buf//buf:defs.bzl", "buf_lint_test")
+load("@rules_proto//proto:defs.bzl", "proto_library")
 
 # gazelle:proto file
 
@@ -23,17 +24,17 @@ proto_library(
     strip_import_prefix = "/proto/protovalidate",
     visibility = ["//visibility:public"],
     deps = [
-        ":expression_proto",
-        "//proto/protovalidate/buf/validate/priv:priv_proto",
         "@com_google_protobuf//:descriptor_proto",
         "@com_google_protobuf//:duration_proto",
+        "@com_google_protobuf//:field_mask_proto",
         "@com_google_protobuf//:timestamp_proto",
     ],
 )
 
 buf_lint_test(
     name = "validate_proto_lint",
-    config = "//proto/protovalidate:buf.yaml",
+    config = "//:buf.yaml",
+    module = "proto/protovalidate",
     targets = [":validate_proto"],
 )
 
@@ -41,23 +42,4 @@ cc_proto_library(
     name = "validate_proto_cc",
     visibility = ["//visibility:public"],
     deps = [":validate_proto"],
-)
-
-proto_library(
-    name = "expression_proto",
-    srcs = ["expression.proto"],
-    strip_import_prefix = "/proto/protovalidate",
-    visibility = ["//visibility:public"],
-)
-
-buf_lint_test(
-    name = "expression_proto_lint",
-    config = "//proto/protovalidate:buf.yaml",
-    targets = [":expression_proto"],
-)
-
-cc_proto_library(
-    name = "expression_proto_cc",
-    visibility = ["//visibility:public"],
-    deps = [":expression_proto"],
 )

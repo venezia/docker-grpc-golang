@@ -11,6 +11,8 @@ load(
     "@com_google_googleapis_imports//:imports.bzl",
     "ruby_cloud_gapic_library",
     "ruby_gapic_assembly_pkg",
+
+    "nodejs_gapic_combined_pkg"
 )
 
 # Generates a Ruby wrapper client for dataproc.
@@ -22,7 +24,7 @@ ruby_cloud_gapic_library(
     extra_protoc_parameters = [
         "ruby-cloud-gem-name=google-cloud-dataproc",
         "ruby-cloud-env-prefix=DATAPROC",
-        "ruby-cloud-wrapper-of=v1:0.7",
+        "ruby-cloud-wrapper-of=v1:0.24",
         "ruby-cloud-product-url=https://cloud.google.com/dataproc",
         "ruby-cloud-api-id=dataproc.googleapis.com",
         "ruby-cloud-api-shortname=dataproc",
@@ -30,6 +32,7 @@ ruby_cloud_gapic_library(
     ],
     ruby_cloud_description = "Manages Hadoop-based clusters and jobs on Google Cloud Platform.",
     ruby_cloud_title = "Cloud Dataproc",
+    transport = "grpc+rest",
 )
 
 # Open Source package.
@@ -37,5 +40,15 @@ ruby_gapic_assembly_pkg(
     name = "google-cloud-dataproc-ruby",
     deps = [
         ":dataproc_ruby_wrapper",
+    ],
+)
+
+nodejs_gapic_combined_pkg(
+    name = "google-cloud-dataproc-nodejs",
+    default_version = "v1",
+    release_level = "stable",
+    templates_excludes = ["package.json", ".Owlbot.yaml"],
+    deps = [
+        "//google/cloud/dataproc/v1:dataproc-v1-nodejs"
     ],
 )

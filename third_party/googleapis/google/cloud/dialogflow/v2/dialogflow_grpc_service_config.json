@@ -12,6 +12,21 @@
           "service": "google.cloud.dialogflow.v2.Contexts"
         },
         {
+          "service": "google.cloud.dialogflow.v2.ConversationalTrainingAssignments"
+        },
+        {
+          "service": "google.cloud.dialogflow.v2.CompanionAgents"
+        },
+        {
+          "service": "google.cloud.dialogflow.v2.ConversationalTrainingMembers"
+        },
+        {
+          "service": "google.cloud.dialogflow.v2.ConversationalTrainingModules"
+        },
+        {
+          "service": "google.cloud.dialogflow.v2.ConversationalTrainingTeams"
+        },
+        {
           "service": "google.cloud.dialogflow.v2.ConversationDatasets"
         },
         {
@@ -27,13 +42,25 @@
           "service": "google.cloud.dialogflow.v2.Documents"
         },
         {
+          "service": "google.cloud.dialogflow.v2.DocumentCollections"
+        },
+        {
           "service": "google.cloud.dialogflow.v2.EntityTypes"
         },
         {
           "service": "google.cloud.dialogflow.v2.Environments"
         },
         {
+          "service": "google.cloud.dialogflow.v2.FeatureCreationFlows"
+        },
+        {
           "service": "google.cloud.dialogflow.v2.Fulfillments"
+        },
+        {
+          "service": "google.cloud.dialogflow.v2.Generators"
+        },
+        {
+          "service": "google.cloud.dialogflow.v2.GeneratorEvaluations"
         },
         {
           "service": "google.cloud.dialogflow.v2.Intents"
@@ -57,7 +84,19 @@
           "service": "google.cloud.dialogflow.v2.SessionEntityTypes"
         },
         {
+          "service": "google.cloud.dialogflow.v2.SupervisorAssignmentService"
+        },
+        {
+          "service": "google.cloud.dialogflow.v2.SipTrunks"
+        },
+        {
+          "service": "google.cloud.dialogflow.v2.Tools"
+        },
+        {
           "service": "google.cloud.dialogflow.v2.Versions"
+        },
+        {
+          "service": "google.cloud.dialogflow.v2.EncryptionSpecService"
         }
       ],
       "timeout": "60s",
@@ -65,9 +104,7 @@
         "initialBackoff": "0.100s",
         "maxBackoff": "60s",
         "backoffMultiplier": 1.3,
-        "retryableStatusCodes": [
-          "UNAVAILABLE"
-        ]
+        "retryableStatusCodes": ["UNAVAILABLE"]
       }
     },
     {
@@ -86,9 +123,7 @@
         "initialBackoff": "0.100s",
         "maxBackoff": "60s",
         "backoffMultiplier": 1.3,
-        "retryableStatusCodes": [
-          "UNAVAILABLE"
-        ]
+        "retryableStatusCodes": ["UNAVAILABLE"]
       }
     },
     {
@@ -103,6 +138,15 @@
         }
       ],
       "timeout": "220s"
+    },
+    {
+      "name": [
+        {
+          "service": "google.cloud.dialogflow.v2.Participants",
+          "method": "BidiEndpointInteract"
+        }
+      ],
+      "timeout": "1800s"
     }
   ]
 }

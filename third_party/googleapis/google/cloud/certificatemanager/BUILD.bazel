@@ -11,6 +11,7 @@ load(
     "@com_google_googleapis_imports//:imports.bzl",
     "ruby_cloud_gapic_library",
     "ruby_gapic_assembly_pkg",
+    "nodejs_gapic_combined_pkg"
 )
 
 # Generates a Ruby wrapper client for certificatemanager.
@@ -21,13 +22,14 @@ ruby_cloud_gapic_library(
     srcs = ["//google/cloud/certificatemanager/v1:certificatemanager_proto_with_info"],
     extra_protoc_parameters = [
         "ruby-cloud-gem-name=google-cloud-certificate_manager",
-        "ruby-cloud-wrapper-of=v1:0.0",
+        "ruby-cloud-wrapper-of=v1:1.0",
         "ruby-cloud-product-url=https://cloud.google.com/certificate-manager",
         "ruby-cloud-api-id=certificatemanager.googleapis.com",
         "ruby-cloud-api-shortname=certificatemanager",
     ],
     ruby_cloud_description = "Certificate Manager lets you acquire and manage Transport Layer Security (TLS) (SSL) certificates for use with classic external HTTP(S) load balancers in Google Cloud.",
     ruby_cloud_title = "Certificate Manager",
+    transport = "grpc+rest",
 )
 
 # Open Source package.
@@ -35,5 +37,15 @@ ruby_gapic_assembly_pkg(
     name = "google-cloud-certificatemanager-ruby",
     deps = [
         ":certificatemanager_ruby_wrapper",
+    ],
+)
+
+nodejs_gapic_combined_pkg(
+    name = "google-cloud-certificatemanager-nodejs",
+    default_version = "v1",
+    release_level = "stable",
+    templates_excludes = ["package.json", ".OwlBot.yaml"],
+    deps = [
+        "//google/cloud/certificatemanager/v1:certificatemanager-v1-nodejs"
     ],
 )
